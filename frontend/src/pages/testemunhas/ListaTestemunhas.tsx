@@ -44,7 +44,7 @@ export default function ListaTestemunhas() {
       <PageHeader title="Testemunhas" createLink="/testemunhas/novo" createLabel="Nova Testemunha" />
       <SearchBar value={busca} onChange={setBusca} placeholder="Buscar por nome ou CPF..." />
       {loading ? (
-        <p className="text-gray-400">Carregando...</p>
+        <p className="text-theme-text-tertiary">Carregando...</p>
       ) : (
         <DataTable
           columns={[

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { api } from "../../lib/api";
 import FormField from "../../components/FormField";
+import CustomCheckbox from "../../components/ui/CustomCheckbox";
 
 interface Advogado { id: string; nome: string; oab: string }
 interface Juiz { id: string; nome: string }
@@ -98,11 +99,11 @@ export default function FormProcesso() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">
+      <h2 className="text-2xl font-bold text-theme-text-primary mb-6">
         {isEdit ? "Editar Capa do Processo" : "Novo Processo"}
       </h2>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 max-w-4xl">
+      <form onSubmit={handleSubmit} className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-6 max-w-4xl">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <FormField label="Número do Processo" name="numeroProcesso" value={form.numeroProcesso} onChange={handleChange} required placeholder="0000000-00.0000.0.00.0000" />
           <FormField label="Status" name="status" value={form.status} onChange={handleChange} options={statusOptions} />
@@ -127,24 +128,16 @@ export default function FormProcesso() {
         </div>
 
         <div className="flex gap-6 mt-4">
-          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.segredoJustica}
-              onChange={(e) => setForm((prev) => ({ ...prev, segredoJustica: e.target.checked }))}
-              className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-            />
-            Segredo de Justiça
-          </label>
-          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={form.tutelaLiminar}
-              onChange={(e) => setForm((prev) => ({ ...prev, tutelaLiminar: e.target.checked }))}
-              className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-            />
-            Tutela/Liminar
-          </label>
+          <CustomCheckbox
+            checked={form.segredoJustica}
+            onChange={(checked) => setForm((prev) => ({ ...prev, segredoJustica: checked }))}
+            label="Segredo de Justiça"
+          />
+          <CustomCheckbox
+            checked={form.tutelaLiminar}
+            onChange={(checked) => setForm((prev) => ({ ...prev, tutelaLiminar: checked }))}
+            label="Tutela/Liminar"
+          />
         </div>
 
         <div className="mt-4">
@@ -155,14 +148,14 @@ export default function FormProcesso() {
           <button
             type="submit"
             disabled={loading}
-            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors text-sm font-medium"
+            className="bg-accent text-white px-6 py-2 rounded-lg hover:bg-accent-hover disabled:opacity-50 transition-colors text-sm font-medium"
           >
             {loading ? "Salvando..." : "Salvar"}
           </button>
           <button
             type="button"
             onClick={() => navigate("/processos")}
-            className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+            className="bg-theme-bg-tertiary text-theme-text-secondary px-6 py-2 rounded-lg hover:bg-theme-bg-hover transition-colors text-sm font-medium"
           >
             Cancelar
           </button>

@@ -50,11 +50,11 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusColors: Record<string, string> = {
-  EM_ANDAMENTO: "bg-blue-100 text-blue-700",
-  SUSPENSO: "bg-yellow-100 text-yellow-700",
-  ARQUIVADO: "bg-gray-100 text-gray-600",
-  ENCERRADO: "bg-green-100 text-green-700",
-  AGUARDANDO_JULGAMENTO: "bg-purple-100 text-purple-700",
+  EM_ANDAMENTO: "bg-info-light text-info",
+  SUSPENSO: "bg-warning-light text-warning",
+  ARQUIVADO: "bg-theme-bg-tertiary text-theme-text-secondary",
+  ENCERRADO: "bg-success-light text-success",
+  AGUARDANDO_JULGAMENTO: "bg-[rgba(139,92,246,0.15)] text-[#8b5cf6]",
 };
 
 export default function DetalheProcesso() {
@@ -77,18 +77,18 @@ export default function DetalheProcesso() {
   }, [id]);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><p className="text-gray-400 text-lg">Carregando...</p></div>;
+    return <div className="flex items-center justify-center h-64"><p className="text-theme-text-tertiary text-lg">Carregando...</p></div>;
   }
 
   if (!processo) {
-    return <div className="flex items-center justify-center h-64"><p className="text-red-400 text-lg">Processo não encontrado</p></div>;
+    return <div className="flex items-center justify-center h-64"><p className="text-danger text-lg">Processo não encontrado</p></div>;
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">
+          <h2 className="text-2xl font-bold text-theme-text-primary">
             Processo {processo.numeroProcesso}
           </h2>
           <div className="flex items-center gap-3 mt-1">
@@ -96,12 +96,12 @@ export default function DetalheProcesso() {
               {statusLabels[processo.status] || processo.status}
             </span>
             {processo.segredoJustica && (
-              <span className="px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+              <span className="px-2 py-1 rounded-full text-xs font-medium bg-danger-light text-danger">
                 Segredo de Justiça
               </span>
             )}
             {processo.tutelaLiminar && (
-              <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+              <span className="px-2 py-1 rounded-full text-xs font-medium bg-warning-light text-warning">
                 Tutela/Liminar
               </span>
             )}
@@ -110,20 +110,20 @@ export default function DetalheProcesso() {
         <div className="flex gap-2">
           <button
             onClick={() => navigate(`/processos/${id}/editar`)}
-            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
+            className="bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent-hover transition-colors text-sm font-medium"
           >
             Editar Capa
           </button>
           <button
             onClick={() => navigate("/processos")}
-            className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+            className="bg-theme-bg-tertiary text-theme-text-secondary px-4 py-2 rounded-lg hover:bg-theme-bg-hover transition-colors text-sm font-medium"
           >
             Voltar
           </button>
         </div>
       </div>
 
-      <div className="border-b border-gray-200 mb-6">
+      <div className="border-b border-theme-border-secondary mb-6">
         <nav className="flex gap-0">
           {tabs.map((tab) => (
             <button
@@ -131,8 +131,8 @@ export default function DetalheProcesso() {
               onClick={() => setActiveTab(tab.id)}
               className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.id
-                  ? "border-primary-600 text-primary-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  ? "border-accent text-accent"
+                  : "border-transparent text-theme-text-tertiary hover:text-theme-text-secondary hover:border-theme-border-primary"
               }`}
             >
               {tab.label}

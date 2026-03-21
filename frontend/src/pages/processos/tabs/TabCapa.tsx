@@ -24,8 +24,8 @@ const statusLabels: Record<string, string> = {
 function Campo({ label, valor }: { label: string; valor: string | null | undefined }) {
   return (
     <div>
-      <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">{label}</dt>
-      <dd className="mt-1 text-sm text-gray-900">{valor || "—"}</dd>
+      <dt className="text-xs font-medium text-theme-text-tertiary uppercase tracking-wider">{label}</dt>
+      <dd className="mt-1 text-sm text-theme-text-primary">{valor || "—"}</dd>
     </div>
   );
 }
@@ -48,8 +48,8 @@ export default function TabCapa({ processo }: { processo: Processo }) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">Informações da Capa</h3>
+    <div className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-6">
+      <h3 className="text-lg font-semibold text-theme-text-primary mb-4">Informações da Capa</h3>
       <dl className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Campo label="Número do Processo" valor={processo.numeroProcesso} />
         <Campo label="Status" valor={statusLabels[processo.status] || processo.status} />
@@ -65,8 +65,8 @@ export default function TabCapa({ processo }: { processo: Processo }) {
       </dl>
       {processo.observacoes && (
         <div className="mt-6 border-t pt-4">
-          <dt className="text-xs font-medium text-gray-500 uppercase tracking-wider">Observações</dt>
-          <dd className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">{processo.observacoes}</dd>
+          <dt className="text-xs font-medium text-theme-text-tertiary uppercase tracking-wider">Observações</dt>
+          <dd className="mt-1 text-sm text-theme-text-primary whitespace-pre-wrap">{processo.observacoes}</dd>
         </div>
       )}
     </div>

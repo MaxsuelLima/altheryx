@@ -49,55 +49,55 @@ export default function TabMovimentacoes({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Nova Movimentação</h3>
+      <div className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-6">
+        <h3 className="text-lg font-semibold text-theme-text-primary mb-4">Nova Movimentação</h3>
         <div className="flex flex-col sm:flex-row gap-3">
           <input
             type="date"
             value={data}
             onChange={(e) => setData(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+            className="px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
           />
           <input
             type="text"
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
             placeholder="Descrição da movimentação..."
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+            className="flex-1 px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
           />
           <button
             onClick={adicionar}
             disabled={adding || !data || !descricao.trim()}
-            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors text-sm font-medium whitespace-nowrap"
+            className="bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent-hover disabled:opacity-50 transition-colors text-sm font-medium whitespace-nowrap"
           >
             Adicionar
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">
+      <div className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-6">
+        <h3 className="text-lg font-semibold text-theme-text-primary mb-4">
           Histórico de Movimentações ({movimentacoes.length})
         </h3>
         {movimentacoes.length === 0 ? (
-          <p className="text-gray-400 text-sm">Nenhuma movimentação registrada</p>
+          <p className="text-theme-text-tertiary text-sm">Nenhuma movimentação registrada</p>
         ) : (
           <div className="relative">
-            <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200" />
+            <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-theme-bg-tertiary" />
             <div className="space-y-4">
               {movimentacoes.map((mov) => (
                 <div key={mov.id} className="relative pl-10">
-                  <div className="absolute left-2.5 top-1.5 w-3 h-3 rounded-full bg-primary-500 border-2 border-white shadow" />
-                  <div className="bg-gray-50 rounded-lg p-4 flex items-start justify-between">
+                  <div className="absolute left-2.5 top-1.5 w-3 h-3 rounded-full bg-accent border-2 border-theme-card-bg shadow" />
+                  <div className="bg-theme-bg-tertiary rounded-lg p-4 flex items-start justify-between">
                     <div>
-                      <span className="text-xs font-medium text-primary-600">
+                      <span className="text-xs font-medium text-accent">
                         {formatDate(mov.data)}
                       </span>
-                      <p className="text-sm text-gray-700 mt-1">{mov.descricao}</p>
+                      <p className="text-sm text-theme-text-secondary mt-1">{mov.descricao}</p>
                     </div>
                     <button
                       onClick={() => excluir(mov.id)}
-                      className="text-red-400 hover:text-red-600 text-xs ml-4 shrink-0"
+                      className="text-danger hover:text-danger text-xs ml-4 shrink-0"
                     >
                       Excluir
                     </button>

@@ -27,11 +27,11 @@ const tipoLabels: Record<string, string> = {
 };
 
 const tipoColors: Record<string, string> = {
-  AUDIENCIA: "bg-blue-100 text-blue-700",
-  PRAZO_PROCESSUAL: "bg-amber-100 text-amber-700",
-  PERICIA: "bg-purple-100 text-purple-700",
-  SUSTENTACAO_ORAL: "bg-indigo-100 text-indigo-700",
-  OUTRO: "bg-gray-100 text-gray-600",
+  AUDIENCIA: "bg-info-light text-info",
+  PRAZO_PROCESSUAL: "bg-warning-light text-warning",
+  PERICIA: "bg-[rgba(139,92,246,0.15)] text-[#8b5cf6]",
+  SUSTENTACAO_ORAL: "bg-accent-light text-accent",
+  OUTRO: "bg-theme-bg-tertiary text-theme-text-secondary",
 };
 
 const statusLabels: Record<string, string> = {
@@ -41,9 +41,9 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusColors: Record<string, string> = {
-  PENDENTE: "bg-yellow-100 text-yellow-700",
-  CUMPRIDO: "bg-green-100 text-green-700",
-  PERDIDO: "bg-red-100 text-red-700",
+  PENDENTE: "bg-warning-light text-warning",
+  CUMPRIDO: "bg-success-light text-success",
+  PERDIDO: "bg-danger-light text-danger",
 };
 
 export default function GestaoPrazos() {
@@ -196,33 +196,33 @@ export default function GestaoPrazos() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><p className="text-gray-400 text-lg">Carregando...</p></div>;
+    return <div className="flex items-center justify-center h-64"><p className="text-theme-text-tertiary text-lg">Carregando...</p></div>;
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Gestão de Prazos</h2>
+        <h2 className="text-2xl font-bold text-theme-text-primary">Gestão de Prazos</h2>
         <button
           onClick={() => { showForm ? resetForm() : setShowForm(true); }}
-          className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
+          className="bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent-hover transition-colors text-sm font-medium"
         >
           {showForm ? "Cancelar" : "Novo Prazo"}
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 mb-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
+        <form onSubmit={handleSubmit} className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-6 mb-6">
+          <h3 className="text-lg font-semibold text-theme-text-primary mb-4">
             {editandoId ? "Editar Prazo" : "Novo Prazo"}
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Processo *</label>
+              <label className="block text-sm font-medium text-theme-text-secondary mb-1">Processo *</label>
               <select
                 value={form.processoId}
                 onChange={(e) => setForm({ ...form, processoId: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
                 required
               >
                 <option value="">Selecione...</option>
@@ -232,11 +232,11 @@ export default function GestaoPrazos() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tipo *</label>
+              <label className="block text-sm font-medium text-theme-text-secondary mb-1">Tipo *</label>
               <select
                 value={form.tipo}
                 onChange={(e) => setForm({ ...form, tipo: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
               >
                 {Object.entries(tipoLabels).map(([k, v]) => (
                   <option key={k} value={k}>{v}</option>
@@ -244,96 +244,96 @@ export default function GestaoPrazos() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Descrição *</label>
+              <label className="block text-sm font-medium text-theme-text-secondary mb-1">Descrição *</label>
               <input
                 type="text"
                 value={form.descricao}
                 onChange={(e) => setForm({ ...form, descricao: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Data Início *</label>
+              <label className="block text-sm font-medium text-theme-text-secondary mb-1">Data Início *</label>
               <input
                 type="date"
                 value={form.dataInicio}
                 onChange={(e) => setForm({ ...form, dataInicio: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Data Fim *</label>
+              <label className="block text-sm font-medium text-theme-text-secondary mb-1">Data Fim *</label>
               <input
                 type="date"
                 value={form.dataFim}
                 onChange={(e) => setForm({ ...form, dataFim: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
                 required
               />
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Hora Início</label>
+                <label className="block text-sm font-medium text-theme-text-secondary mb-1">Hora Início</label>
                 <input
                   type="time"
                   value={form.horaInicio}
                   onChange={(e) => setForm({ ...form, horaInicio: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Hora Fim</label>
+                <label className="block text-sm font-medium text-theme-text-secondary mb-1">Hora Fim</label>
                 <input
                   type="time"
                   value={form.horaFim}
                   onChange={(e) => setForm({ ...form, horaFim: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
                 />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Local</label>
+              <label className="block text-sm font-medium text-theme-text-secondary mb-1">Local</label>
               <input
                 type="text"
                 value={form.local}
                 onChange={(e) => setForm({ ...form, local: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Preposto</label>
+              <label className="block text-sm font-medium text-theme-text-secondary mb-1">Preposto</label>
               <input
                 type="text"
                 value={form.prepostoNome}
                 onChange={(e) => setForm({ ...form, prepostoNome: e.target.value })}
                 placeholder="Nome do preposto"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Contato Preposto</label>
+              <label className="block text-sm font-medium text-theme-text-secondary mb-1">Contato Preposto</label>
               <input
                 type="text"
                 value={form.prepostoContato}
                 onChange={(e) => setForm({ ...form, prepostoContato: e.target.value })}
                 placeholder="Telefone/email"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
               />
             </div>
             <div className="md:col-span-3">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Observações</label>
+              <label className="block text-sm font-medium text-theme-text-secondary mb-1">Observações</label>
               <textarea
                 value={form.observacoes}
                 onChange={(e) => setForm({ ...form, observacoes: e.target.value })}
                 rows={2}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
               />
             </div>
             {testemunhas.length > 0 && (
               <div className="md:col-span-3">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Testemunhas Vinculadas</label>
+                <label className="block text-sm font-medium text-theme-text-secondary mb-2">Testemunhas Vinculadas</label>
                 <div className="flex flex-wrap gap-2">
                   {testemunhas.map((t) => (
                     <button
@@ -342,8 +342,8 @@ export default function GestaoPrazos() {
                       onClick={() => toggleTestemunha(t.id)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                         form.testemunhaIds.includes(t.id)
-                          ? "bg-primary-600 text-white"
-                          : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                          ? "bg-accent text-white"
+                          : "bg-theme-bg-tertiary text-theme-text-secondary hover:bg-theme-bg-tertiary"
                       }`}
                     >
                       {t.nome}
@@ -354,7 +354,7 @@ export default function GestaoPrazos() {
             )}
           </div>
           <div className="flex justify-end mt-4">
-            <button type="submit" className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium">
+            <button type="submit" className="bg-accent text-white px-6 py-2 rounded-lg hover:bg-accent-hover transition-colors text-sm font-medium">
               {editandoId ? "Atualizar" : "Salvar"}
             </button>
           </div>
@@ -366,12 +366,12 @@ export default function GestaoPrazos() {
           type="month"
           value={mesAno}
           onChange={(e) => setMesAno(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          className="border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
         />
         <select
           value={filtroTipo}
           onChange={(e) => setFiltroTipo(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          className="border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
         >
           <option value="">Todos os tipos</option>
           {Object.entries(tipoLabels).map(([k, v]) => (
@@ -381,7 +381,7 @@ export default function GestaoPrazos() {
         <select
           value={filtroStatus}
           onChange={(e) => setFiltroStatus(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          className="border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
         >
           <option value="">Todos os status</option>
           {Object.entries(statusLabels).map(([k, v]) => (
@@ -391,8 +391,8 @@ export default function GestaoPrazos() {
       </div>
 
       {prazos.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <p className="text-gray-400 text-lg">Nenhum prazo encontrado para este período</p>
+        <div className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-12 text-center">
+          <p className="text-theme-text-tertiary text-lg">Nenhum prazo encontrado para este período</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -403,14 +403,14 @@ export default function GestaoPrazos() {
             return (
               <div
                 key={prazo.id}
-                className={`bg-white rounded-lg shadow p-5 border-l-4 ${
+                className={`bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-5 border-l-4 ${
                   vencido
                     ? "border-red-500"
                     : urgente
                     ? "border-orange-400"
                     : prazo.status === "CUMPRIDO"
                     ? "border-green-400"
-                    : "border-primary-400"
+                    : "border-accent"
                 }`}
               >
                 <div className="flex items-start justify-between">
@@ -423,7 +423,7 @@ export default function GestaoPrazos() {
                         {statusLabels[prazo.status] || prazo.status}
                       </span>
                       {vencido && (
-                        <span className="px-2 py-0.5 rounded text-xs font-medium bg-red-500 text-white">
+                        <span className="px-2 py-0.5 rounded text-xs font-medium bg-danger-light0 text-white">
                           Vencido
                         </span>
                       )}
@@ -433,11 +433,11 @@ export default function GestaoPrazos() {
                         </span>
                       )}
                     </div>
-                    <h4 className="font-semibold text-gray-800">{prazo.descricao}</h4>
-                    <p className="text-xs text-primary-600 mt-1">
+                    <h4 className="font-semibold text-theme-text-primary">{prazo.descricao}</h4>
+                    <p className="text-xs text-accent mt-1">
                       Processo: {prazo.processo.numeroProcesso}
                     </p>
-                    <div className="flex items-center gap-4 mt-2 text-sm text-gray-600">
+                    <div className="flex items-center gap-4 mt-2 text-sm text-theme-text-secondary">
                       <span>
                         {new Date(prazo.dataInicio).toLocaleDateString("pt-BR")}
                         {prazo.horaInicio && ` ${prazo.horaInicio}`}
@@ -448,7 +448,7 @@ export default function GestaoPrazos() {
                       {prazo.local && <span>| {prazo.local}</span>}
                     </div>
                     {prazo.prepostoNome && (
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="text-xs text-theme-text-tertiary mt-1">
                         Preposto: {prazo.prepostoNome}
                         {prazo.prepostoContato && ` (${prazo.prepostoContato})`}
                       </p>
@@ -456,7 +456,7 @@ export default function GestaoPrazos() {
                     {prazo.testemunhas.length > 0 && (
                       <div className="flex gap-1 mt-2 flex-wrap">
                         {prazo.testemunhas.map((t) => (
-                          <span key={t.id} className="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs">
+                          <span key={t.id} className="bg-theme-bg-tertiary text-theme-text-secondary px-2 py-0.5 rounded text-xs">
                             {t.testemunha.nome}
                           </span>
                         ))}
@@ -467,20 +467,20 @@ export default function GestaoPrazos() {
                     {prazo.status === "PENDENTE" && (
                       <button
                         onClick={() => marcarStatus(prazo.id, "CUMPRIDO")}
-                        className="text-xs bg-green-100 text-green-700 px-3 py-1.5 rounded-lg hover:bg-green-200 transition-colors"
+                        className="text-xs bg-success-light text-success px-3 py-1.5 rounded-lg hover:bg-success-light transition-colors"
                       >
                         Cumprido
                       </button>
                     )}
                     <button
                       onClick={() => handleEditar(prazo)}
-                      className="text-xs bg-primary-100 text-primary-700 px-3 py-1.5 rounded-lg hover:bg-primary-200 transition-colors"
+                      className="text-xs bg-accent-light text-accent-hover px-3 py-1.5 rounded-lg hover:bg-accent-light transition-colors"
                     >
                       Editar
                     </button>
                     <button
                       onClick={() => excluir(prazo.id)}
-                      className="text-xs bg-red-100 text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-200 transition-colors"
+                      className="text-xs bg-danger-light text-danger px-3 py-1.5 rounded-lg hover:bg-danger-light transition-colors"
                     >
                       Excluir
                     </button>

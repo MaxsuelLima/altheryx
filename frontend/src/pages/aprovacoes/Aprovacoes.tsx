@@ -33,9 +33,9 @@ interface Dashboard {
 }
 
 const statusColors: Record<string, string> = {
-  PENDENTE: "bg-amber-100 text-amber-700",
-  APROVADA: "bg-green-100 text-green-700",
-  REJEITADA: "bg-red-100 text-red-700",
+  PENDENTE: "bg-warning-light text-warning",
+  APROVADA: "bg-success-light text-success",
+  REJEITADA: "bg-danger-light text-danger",
 };
 
 const statusLabels: Record<string, string> = {
@@ -51,9 +51,9 @@ const acaoLabels: Record<string, string> = {
 };
 
 const acaoColors: Record<string, string> = {
-  CRIACAO: "bg-green-100 text-green-700",
-  ATUALIZACAO: "bg-blue-100 text-blue-700",
-  EXCLUSAO: "bg-red-100 text-red-700",
+  CRIACAO: "bg-success-light text-success",
+  ATUALIZACAO: "bg-info-light text-info",
+  EXCLUSAO: "bg-danger-light text-danger",
 };
 
 function formatValue(val: unknown): string {
@@ -78,12 +78,12 @@ function DiffTable({ antes, depois }: { antes: Record<string, unknown> | null; d
   const campos = camposAlterados.length > 0 ? camposAlterados : camposVisiveis;
 
   return (
-    <table className="w-full text-sm border border-gray-200 rounded">
+    <table className="w-full text-sm border border-theme-border-secondary rounded">
       <thead>
-        <tr className="bg-gray-50">
-          <th className="text-left px-3 py-2 font-medium text-gray-600 w-1/4">Campo</th>
-          {antes && <th className="text-left px-3 py-2 font-medium text-gray-600 w-3/8">Antes (De)</th>}
-          {depois && <th className="text-left px-3 py-2 font-medium text-gray-600 w-3/8">Depois (Para)</th>}
+        <tr className="bg-theme-bg-tertiary">
+          <th className="text-left px-3 py-2 font-medium text-theme-text-secondary w-1/4">Campo</th>
+          {antes && <th className="text-left px-3 py-2 font-medium text-theme-text-secondary w-3/8">Antes (De)</th>}
+          {depois && <th className="text-left px-3 py-2 font-medium text-theme-text-secondary w-3/8">Depois (Para)</th>}
         </tr>
       </thead>
       <tbody>
@@ -92,10 +92,10 @@ function DiffTable({ antes, depois }: { antes: Record<string, unknown> | null; d
           const d = depois ? formatValue(depois[key]) : "—";
           const changed = a !== d;
           return (
-            <tr key={key} className={changed ? "bg-yellow-50" : ""}>
-              <td className="px-3 py-1.5 font-medium text-gray-700 border-t">{key}</td>
-              {antes && <td className={`px-3 py-1.5 border-t ${changed ? "text-red-600 line-through" : "text-gray-600"}`}>{a}</td>}
-              {depois && <td className={`px-3 py-1.5 border-t ${changed ? "text-green-700 font-medium" : "text-gray-600"}`}>{d}</td>}
+            <tr key={key} className={changed ? "bg-warning-light" : ""}>
+              <td className="px-3 py-1.5 font-medium text-theme-text-secondary border-t">{key}</td>
+              {antes && <td className={`px-3 py-1.5 border-t ${changed ? "text-danger line-through" : "text-theme-text-secondary"}`}>{a}</td>}
+              {depois && <td className={`px-3 py-1.5 border-t ${changed ? "text-success font-medium" : "text-theme-text-secondary"}`}>{d}</td>}
             </tr>
           );
         })}
@@ -162,18 +162,18 @@ export default function Aprovacoes() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><p className="text-gray-400 text-lg">Carregando...</p></div>;
+    return <div className="flex items-center justify-center h-64"><p className="text-theme-text-tertiary text-lg">Carregando...</p></div>;
   }
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Auditoria e Aprovações</h2>
+      <h2 className="text-2xl font-bold text-theme-text-primary mb-6">Auditoria e Aprovações</h2>
 
       <div className="flex gap-2 mb-6">
         <button
           onClick={() => setTab("aprovacoes")}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            tab === "aprovacoes" ? "bg-primary-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            tab === "aprovacoes" ? "bg-accent text-white" : "bg-theme-bg-tertiary text-theme-text-secondary hover:bg-theme-bg-hover"
           }`}
         >
           Aprovações Pendentes
@@ -181,7 +181,7 @@ export default function Aprovacoes() {
         <button
           onClick={() => setTab("auditoria")}
           className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-            tab === "auditoria" ? "bg-primary-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+            tab === "auditoria" ? "bg-accent text-white" : "bg-theme-bg-tertiary text-theme-text-secondary hover:bg-theme-bg-hover"
           }`}
         >
           Histórico de Alterações
@@ -192,17 +192,17 @@ export default function Aprovacoes() {
         <>
           {dashboard && (
             <div className="grid grid-cols-3 gap-3 mb-6">
-              <div className="bg-white rounded-lg shadow p-4 text-center">
-                <p className="text-2xl font-bold text-amber-600">{dashboard.pendentes}</p>
-                <p className="text-xs text-gray-500">Pendentes</p>
+              <div className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-4 text-center">
+                <p className="text-2xl font-bold text-warning">{dashboard.pendentes}</p>
+                <p className="text-xs text-theme-text-tertiary">Pendentes</p>
               </div>
-              <div className="bg-white rounded-lg shadow p-4 text-center">
-                <p className="text-2xl font-bold text-green-600">{dashboard.aprovadas}</p>
-                <p className="text-xs text-gray-500">Aprovadas</p>
+              <div className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-4 text-center">
+                <p className="text-2xl font-bold text-success">{dashboard.aprovadas}</p>
+                <p className="text-xs text-theme-text-tertiary">Aprovadas</p>
               </div>
-              <div className="bg-white rounded-lg shadow p-4 text-center">
-                <p className="text-2xl font-bold text-red-600">{dashboard.rejeitadas}</p>
-                <p className="text-xs text-gray-500">Rejeitadas</p>
+              <div className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-4 text-center">
+                <p className="text-2xl font-bold text-danger">{dashboard.rejeitadas}</p>
+                <p className="text-xs text-theme-text-tertiary">Rejeitadas</p>
               </div>
             </div>
           )}
@@ -211,7 +211,7 @@ export default function Aprovacoes() {
             <select
               value={filtroStatus}
               onChange={(e) => setFiltroStatus(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
             >
               <option value="PENDENTE">Pendentes</option>
               <option value="APROVADA">Aprovadas</option>
@@ -221,32 +221,32 @@ export default function Aprovacoes() {
           </div>
 
           {aprovacoes.length === 0 ? (
-            <div className="bg-white rounded-lg shadow p-12 text-center">
-              <p className="text-gray-400 text-lg">Nenhuma aprovação encontrada</p>
+            <div className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-12 text-center">
+              <p className="text-theme-text-tertiary text-lg">Nenhuma aprovação encontrada</p>
             </div>
           ) : (
             <div className="space-y-3">
               {aprovacoes.map((aprov) => (
-                <div key={aprov.id} className="bg-white rounded-lg shadow p-5">
+                <div key={aprov.id} className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-5">
                   <div className="flex items-start justify-between mb-3">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-gray-800">{aprov.entidade}</span>
+                        <span className="font-semibold text-theme-text-primary">{aprov.entidade}</span>
                         <span className={`px-2 py-0.5 rounded text-xs font-medium ${statusColors[aprov.status] ?? ""}`}>
                           {statusLabels[aprov.status] ?? aprov.status}
                         </span>
                       </div>
-                      <div className="text-xs text-gray-500 space-x-3">
+                      <div className="text-xs text-theme-text-tertiary space-x-3">
                         <span>Solicitado por: {aprov.solicitadoPor}</span>
                         <span>Em: {new Date(aprov.criadoEm).toLocaleString("pt-BR")}</span>
                         {aprov.aprovadoPor && <span>Resolvido por: {aprov.aprovadoPor}</span>}
-                        {aprov.motivoRejeicao && <span className="text-red-600">Motivo: {aprov.motivoRejeicao}</span>}
+                        {aprov.motivoRejeicao && <span className="text-danger">Motivo: {aprov.motivoRejeicao}</span>}
                       </div>
                     </div>
                     <div className="flex gap-2">
                       <button
                         onClick={() => setExpandido(expandido === aprov.id ? null : aprov.id)}
-                        className="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition-colors"
+                        className="text-xs bg-theme-bg-tertiary text-theme-text-secondary px-3 py-1.5 rounded-lg hover:bg-theme-bg-tertiary transition-colors"
                       >
                         {expandido === aprov.id ? "Recolher" : "Ver Detalhes"}
                       </button>
@@ -254,13 +254,13 @@ export default function Aprovacoes() {
                         <>
                           <button
                             onClick={() => aprovar(aprov.id)}
-                            className="text-xs bg-green-100 text-green-700 px-3 py-1.5 rounded-lg hover:bg-green-200 transition-colors"
+                            className="text-xs bg-success-light text-success px-3 py-1.5 rounded-lg hover:bg-success-light transition-colors"
                           >
                             Aprovar
                           </button>
                           <button
                             onClick={() => setExpandido(aprov.id + "-rejeitar")}
-                            className="text-xs bg-red-100 text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-200 transition-colors"
+                            className="text-xs bg-danger-light text-danger px-3 py-1.5 rounded-lg hover:bg-danger-light transition-colors"
                           >
                             Rejeitar
                           </button>
@@ -271,31 +271,31 @@ export default function Aprovacoes() {
 
                   {expandido === aprov.id && (
                     <div className="mt-3 border-t pt-3">
-                      <p className="text-sm font-medium text-gray-700 mb-2">Comparação De → Para:</p>
+                      <p className="text-sm font-medium text-theme-text-secondary mb-2">Comparação De → Para:</p>
                       <DiffTable antes={aprov.dadosAtuais} depois={aprov.dadosPropostos} />
                     </div>
                   )}
 
                   {expandido === aprov.id + "-rejeitar" && (
                     <div className="mt-3 border-t pt-3">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Motivo da Rejeição</label>
+                      <label className="block text-sm font-medium text-theme-text-secondary mb-1">Motivo da Rejeição</label>
                       <div className="flex gap-2">
                         <input
                           type="text"
                           value={motivoRejeicao}
                           onChange={(e) => setMotivoRejeicao(e.target.value)}
                           placeholder="Informe o motivo..."
-                          className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                          className="flex-1 border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
                         />
                         <button
                           onClick={() => rejeitar(aprov.id)}
-                          className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700 transition-colors"
+                          className="bg-danger text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700 transition-colors"
                         >
                           Confirmar Rejeição
                         </button>
                         <button
                           onClick={() => { setExpandido(null); setMotivoRejeicao(""); }}
-                          className="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-300 transition-colors"
+                          className="bg-theme-bg-tertiary text-theme-text-secondary px-4 py-2 rounded-lg text-sm hover:bg-theme-bg-hover transition-colors"
                         >
                           Cancelar
                         </button>
@@ -315,7 +315,7 @@ export default function Aprovacoes() {
             <select
               value={filtroEntidade}
               onChange={(e) => setFiltroEntidade(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
             >
               <option value="">Todas as entidades</option>
               <option value="Cliente">Cliente</option>
@@ -337,7 +337,7 @@ export default function Aprovacoes() {
             <select
               value={filtroAcao}
               onChange={(e) => setFiltroAcao(e.target.value)}
-              className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
             >
               <option value="">Todas as ações</option>
               <option value="CRIACAO">Criação</option>
@@ -347,30 +347,30 @@ export default function Aprovacoes() {
           </div>
 
           {auditorias.length === 0 ? (
-            <div className="bg-white rounded-lg shadow p-12 text-center">
-              <p className="text-gray-400 text-lg">Nenhum registro de auditoria encontrado</p>
+            <div className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-12 text-center">
+              <p className="text-theme-text-tertiary text-lg">Nenhum registro de auditoria encontrado</p>
             </div>
           ) : (
             <div className="space-y-3">
               {auditorias.map((log) => (
-                <div key={log.id} className="bg-white rounded-lg shadow p-5">
+                <div key={log.id} className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-5">
                   <div className="flex items-start justify-between mb-2">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-gray-800">{log.entidade}</span>
+                        <span className="font-semibold text-theme-text-primary">{log.entidade}</span>
                         <span className={`px-2 py-0.5 rounded text-xs font-medium ${acaoColors[log.acao] ?? ""}`}>
                           {acaoLabels[log.acao] ?? log.acao}
                         </span>
                       </div>
-                      <div className="text-xs text-gray-500 space-x-3">
+                      <div className="text-xs text-theme-text-tertiary space-x-3">
                         <span>Usuário: {log.usuario}</span>
                         <span>Em: {new Date(log.criadoEm).toLocaleString("pt-BR")}</span>
-                        <span className="font-mono text-gray-400">ID: {log.entidadeId.slice(0, 8)}...</span>
+                        <span className="font-mono text-theme-text-tertiary">ID: {log.entidadeId.slice(0, 8)}...</span>
                       </div>
                     </div>
                     <button
                       onClick={() => setExpandido(expandido === log.id ? null : log.id)}
-                      className="text-xs bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition-colors"
+                      className="text-xs bg-theme-bg-tertiary text-theme-text-secondary px-3 py-1.5 rounded-lg hover:bg-theme-bg-tertiary transition-colors"
                     >
                       {expandido === log.id ? "Recolher" : "Ver Detalhes"}
                     </button>
@@ -380,19 +380,19 @@ export default function Aprovacoes() {
                     <div className="mt-3 border-t pt-3">
                       {log.acao === "CRIACAO" && log.dadosNovos && (
                         <>
-                          <p className="text-sm font-medium text-gray-700 mb-2">Dados criados:</p>
+                          <p className="text-sm font-medium text-theme-text-secondary mb-2">Dados criados:</p>
                           <DiffTable antes={null} depois={log.dadosNovos} />
                         </>
                       )}
                       {log.acao === "ATUALIZACAO" && (
                         <>
-                          <p className="text-sm font-medium text-gray-700 mb-2">Alterações (De → Para):</p>
+                          <p className="text-sm font-medium text-theme-text-secondary mb-2">Alterações (De → Para):</p>
                           <DiffTable antes={log.dadosAnteriores} depois={log.dadosNovos} />
                         </>
                       )}
                       {log.acao === "EXCLUSAO" && log.dadosAnteriores && (
                         <>
-                          <p className="text-sm font-medium text-gray-700 mb-2">Dados excluídos:</p>
+                          <p className="text-sm font-medium text-theme-text-secondary mb-2">Dados excluídos:</p>
                           <DiffTable antes={log.dadosAnteriores} depois={null} />
                         </>
                       )}

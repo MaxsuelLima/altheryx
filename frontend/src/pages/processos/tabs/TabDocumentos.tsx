@@ -24,12 +24,12 @@ const origemLabels: Record<string, string> = {
 };
 
 const origemColors: Record<string, string> = {
-  PARTE_AUTORA: "bg-blue-100 text-blue-700",
-  PARTE_RE: "bg-red-100 text-red-700",
-  JUDICIARIO: "bg-purple-100 text-purple-700",
-  MINISTERIO_PUBLICO: "bg-amber-100 text-amber-700",
-  PERITO: "bg-teal-100 text-teal-700",
-  OUTRO: "bg-gray-100 text-gray-600",
+  PARTE_AUTORA: "bg-info-light text-info",
+  PARTE_RE: "bg-danger-light text-danger",
+  JUDICIARIO: "bg-[rgba(139,92,246,0.15)] text-[#8b5cf6]",
+  MINISTERIO_PUBLICO: "bg-warning-light text-warning",
+  PERITO: "bg-[rgba(20,184,166,0.15)] text-[#0d9488]",
+  OUTRO: "bg-theme-bg-tertiary text-theme-text-secondary",
 };
 
 const flagLabels: Record<string, string> = {
@@ -44,12 +44,12 @@ const flagLabels: Record<string, string> = {
 
 const flagColors: Record<string, string> = {
   NENHUMA: "",
-  DEFERIDA: "bg-green-100 text-green-700 border border-green-300",
-  INDEFERIDA: "bg-red-100 text-red-700 border border-red-300",
-  PARCIALMENTE_DEFERIDA: "bg-yellow-100 text-yellow-700 border border-yellow-300",
-  SENTENCA: "bg-indigo-100 text-indigo-700 border border-indigo-300",
-  ACORDAO: "bg-violet-100 text-violet-700 border border-violet-300",
-  DESPACHO: "bg-sky-100 text-sky-700 border border-sky-300",
+  DEFERIDA: "bg-success-light text-success border border-green-300",
+  INDEFERIDA: "bg-danger-light text-danger border border-red-300",
+  PARCIALMENTE_DEFERIDA: "bg-warning-light text-warning border border-yellow-300",
+  SENTENCA: "bg-accent-light text-accent border border-indigo-300",
+  ACORDAO: "bg-[rgba(139,92,246,0.15)] text-[#8b5cf6] border border-violet-300",
+  DESPACHO: "bg-info-light text-info border border-sky-300",
 };
 
 const origemOptions = [
@@ -194,47 +194,47 @@ export default function TabDocumentos({ processoId }: { processoId: string }) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <h3 className="text-lg font-semibold text-gray-800">
+        <h3 className="text-lg font-semibold text-theme-text-primary">
           Cópia Integral ({documentos.length} documento{documentos.length !== 1 ? "s" : ""})
         </h3>
         <button
           onClick={() => setShowUploadForm(!showUploadForm)}
-          className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
+          className="bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent-hover transition-colors text-sm font-medium"
         >
           {showUploadForm ? "Cancelar" : "+ Upload de Documento"}
         </button>
       </div>
 
       {showUploadForm && (
-        <div className="bg-white rounded-lg shadow p-6">
-          <h4 className="font-medium text-gray-800 mb-4">Enviar Documento</h4>
+        <div className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-6">
+          <h4 className="font-medium text-theme-text-primary mb-4">Enviar Documento</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Arquivo <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-theme-text-secondary mb-1">
+                Arquivo <span className="text-danger">*</span>
               </label>
               <input
                 ref={fileInputRef}
                 type="file"
                 accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx"
-                className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100"
+                className="w-full text-sm text-theme-text-tertiary file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-accent-subtle file:text-accent-hover hover:file:bg-accent-light"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Data do Documento</label>
+              <label className="block text-sm font-medium text-theme-text-secondary mb-1">Data do Documento</label>
               <input
                 type="date"
                 value={uploadForm.dataDocumento}
                 onChange={(e) => setUploadForm((prev) => ({ ...prev, dataDocumento: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                className="w-full px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Origem / Peticionante</label>
+              <label className="block text-sm font-medium text-theme-text-secondary mb-1">Origem / Peticionante</label>
               <select
                 value={uploadForm.origem}
                 onChange={(e) => setUploadForm((prev) => ({ ...prev, origem: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                className="w-full px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
               >
                 {origemOptions.slice(1).map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -242,11 +242,11 @@ export default function TabDocumentos({ processoId }: { processoId: string }) {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Flag de Decisão</label>
+              <label className="block text-sm font-medium text-theme-text-secondary mb-1">Flag de Decisão</label>
               <select
                 value={uploadForm.flagDecisao}
                 onChange={(e) => setUploadForm((prev) => ({ ...prev, flagDecisao: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                className="w-full px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
               >
                 {flagOptions.slice(1).map((opt) => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -254,13 +254,13 @@ export default function TabDocumentos({ processoId }: { processoId: string }) {
               </select>
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+              <label className="block text-sm font-medium text-theme-text-secondary mb-1">Descrição</label>
               <input
                 type="text"
                 value={uploadForm.descricao}
                 onChange={(e) => setUploadForm((prev) => ({ ...prev, descricao: e.target.value }))}
                 placeholder="Ex: Petição inicial, Contestação, Sentença..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                className="w-full px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
               />
             </div>
           </div>
@@ -268,7 +268,7 @@ export default function TabDocumentos({ processoId }: { processoId: string }) {
             <button
               onClick={handleUpload}
               disabled={uploading}
-              className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors text-sm font-medium"
+              className="bg-success text-white px-6 py-2 rounded-lg hover:bg-[#059669] disabled:opacity-50 transition-colors text-sm font-medium"
             >
               {uploading ? "Enviando..." : "Enviar Documento"}
             </button>
@@ -280,7 +280,7 @@ export default function TabDocumentos({ processoId }: { processoId: string }) {
         <select
           value={filtroOrigem}
           onChange={(e) => setFiltroOrigem(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+          className="px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
         >
           {origemOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -289,7 +289,7 @@ export default function TabDocumentos({ processoId }: { processoId: string }) {
         <select
           value={filtroFlag}
           onChange={(e) => setFiltroFlag(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+          className="px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
         >
           {flagOptions.map((opt) => (
             <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -298,22 +298,22 @@ export default function TabDocumentos({ processoId }: { processoId: string }) {
       </div>
 
       {loading ? (
-        <p className="text-gray-400">Carregando...</p>
+        <p className="text-theme-text-tertiary">Carregando...</p>
       ) : documentos.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-8 text-center text-gray-400">
+        <div className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-8 text-center text-theme-text-tertiary">
           Nenhum documento encontrado
         </div>
       ) : (
         <div className="space-y-3">
           {documentos.map((doc) => (
-            <div key={doc.id} className="bg-white rounded-lg shadow p-4">
+            <div key={doc.id} className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-4">
               {editingId === doc.id ? (
                 <div className="space-y-3">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <select
                       value={editForm.origem}
                       onChange={(e) => setEditForm((prev) => ({ ...prev, origem: e.target.value }))}
-                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                      className="px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
                     >
                       {origemOptions.slice(1).map((opt) => (
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -322,7 +322,7 @@ export default function TabDocumentos({ processoId }: { processoId: string }) {
                     <select
                       value={editForm.flagDecisao}
                       onChange={(e) => setEditForm((prev) => ({ ...prev, flagDecisao: e.target.value }))}
-                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                      className="px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
                     >
                       {flagOptions.slice(1).map((opt) => (
                         <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -333,14 +333,14 @@ export default function TabDocumentos({ processoId }: { processoId: string }) {
                       value={editForm.descricao}
                       onChange={(e) => setEditForm((prev) => ({ ...prev, descricao: e.target.value }))}
                       placeholder="Descrição..."
-                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                      className="px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
                     />
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={saveEdit} className="bg-green-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-700 transition-colors">
+                    <button onClick={saveEdit} className="bg-success text-white px-3 py-1 rounded-lg text-sm hover:bg-[#059669] transition-colors">
                       Salvar
                     </button>
-                    <button onClick={() => setEditingId(null)} className="bg-gray-200 text-gray-700 px-3 py-1 rounded-lg text-sm hover:bg-gray-300 transition-colors">
+                    <button onClick={() => setEditingId(null)} className="bg-theme-bg-tertiary text-theme-text-secondary px-3 py-1 rounded-lg text-sm hover:bg-theme-bg-hover transition-colors">
                       Cancelar
                     </button>
                   </div>
@@ -348,12 +348,12 @@ export default function TabDocumentos({ processoId }: { processoId: string }) {
               ) : (
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4 flex-1 min-w-0">
-                    <div className="shrink-0 w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center text-lg">
+                    <div className="shrink-0 w-10 h-10 bg-theme-bg-tertiary rounded-lg flex items-center justify-center text-lg">
                       {doc.mimeType.includes("pdf") ? "📄" : doc.mimeType.includes("image") ? "🖼️" : "📎"}
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm font-medium text-gray-800 truncate">
+                        <p className="text-sm font-medium text-theme-text-primary truncate">
                           {doc.descricao || doc.nomeOriginal}
                         </p>
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${origemColors[doc.origem] || ""}`}>
@@ -365,7 +365,7 @@ export default function TabDocumentos({ processoId }: { processoId: string }) {
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                      <div className="flex items-center gap-3 mt-1 text-xs text-theme-text-tertiary">
                         <span>{formatDate(doc.dataDocumento)}</span>
                         <span>{formatSize(doc.tamanho)}</span>
                         {doc.descricao && (
@@ -377,19 +377,19 @@ export default function TabDocumentos({ processoId }: { processoId: string }) {
                   <div className="flex items-center gap-2 ml-4 shrink-0">
                     <button
                       onClick={() => handleDownload(doc)}
-                      className="bg-primary-50 text-primary-700 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-primary-100 transition-colors"
+                      className="bg-accent-subtle text-accent-hover px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-accent-light transition-colors"
                     >
                       Download
                     </button>
                     <button
                       onClick={() => startEdit(doc)}
-                      className="text-primary-600 hover:text-primary-800 text-sm font-medium"
+                      className="text-accent hover:text-accent-hover text-sm font-medium"
                     >
                       Editar
                     </button>
                     <button
                       onClick={() => excluir(doc)}
-                      className="text-red-500 hover:text-red-700 text-sm font-medium"
+                      className="text-danger hover:text-danger text-sm font-medium"
                     >
                       Excluir
                     </button>

@@ -46,7 +46,7 @@ export default function ListaClientes() {
       <PageHeader title="Clientes" createLink="/clientes/novo" createLabel="Novo Cliente" />
       <SearchBar value={busca} onChange={setBusca} placeholder="Buscar por nome, CPF/CNPJ ou e-mail..." />
       {loading ? (
-        <p className="text-gray-400">Carregando...</p>
+        <p className="text-theme-text-tertiary">Carregando...</p>
       ) : (
         <DataTable
           columns={[
@@ -63,7 +63,7 @@ export default function ListaClientes() {
               key: "ativo",
               label: "Status",
               render: (c) => (
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${c.ativo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${c.ativo ? "bg-success-light text-success" : "bg-danger-light text-danger"}`}>
                   {c.ativo ? "Ativo" : "Inativo"}
                 </span>
               ),

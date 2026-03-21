@@ -26,11 +26,11 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusColors: Record<string, string> = {
-  EM_ANDAMENTO: "bg-blue-100 text-blue-700",
-  SUSPENSO: "bg-yellow-100 text-yellow-700",
-  ARQUIVADO: "bg-gray-100 text-gray-600",
-  ENCERRADO: "bg-green-100 text-green-700",
-  AGUARDANDO_JULGAMENTO: "bg-purple-100 text-purple-700",
+  EM_ANDAMENTO: "bg-info-light text-info",
+  SUSPENSO: "bg-warning-light text-warning",
+  ARQUIVADO: "bg-theme-bg-tertiary text-theme-text-secondary",
+  ENCERRADO: "bg-success-light text-success",
+  AGUARDANDO_JULGAMENTO: "bg-[rgba(139,92,246,0.15)] text-[#8b5cf6]",
 };
 
 export default function ListaProcessos() {
@@ -75,7 +75,7 @@ export default function ListaProcessos() {
         <select
           value={filtroStatus}
           onChange={(e) => setFiltroStatus(e.target.value)}
-          className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+          className="px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
         >
           <option value="">Todos os status</option>
           {Object.entries(statusLabels).map(([value, label]) => (
@@ -85,7 +85,7 @@ export default function ListaProcessos() {
       </div>
 
       {loading ? (
-        <p className="text-gray-400">Carregando...</p>
+        <p className="text-theme-text-tertiary">Carregando...</p>
       ) : (
         <DataTable
           columns={[

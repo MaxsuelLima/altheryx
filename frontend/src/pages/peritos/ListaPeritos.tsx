@@ -59,7 +59,7 @@ export default function ListaPeritos() {
         <select
           value={filtroTipo}
           onChange={(e) => setFiltroTipo(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white"
+          className="border border-theme-border-primary rounded-lg px-3 py-2 text-sm bg-theme-input-bg"
         >
           <option value="">Todos os tipos</option>
           <option value="PERITO">Perito</option>
@@ -68,7 +68,7 @@ export default function ListaPeritos() {
       </div>
 
       {loading ? (
-        <p className="text-gray-400">Carregando...</p>
+        <p className="text-theme-text-tertiary">Carregando...</p>
       ) : (
         <DataTable
           columns={[

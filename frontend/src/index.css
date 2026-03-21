@@ -2,6 +2,108 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --font-family: "Inter", system-ui, -apple-system, sans-serif;
+
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --primary-light: rgba(99, 102, 241, 0.15);
+  --primary-subtle: rgba(99, 102, 241, 0.08);
+
+  --success: #10b981;
+  --success-light: rgba(16, 185, 129, 0.15);
+  --warning: #f59e0b;
+  --warning-light: rgba(245, 158, 11, 0.15);
+  --danger: #ef4444;
+  --danger-light: rgba(239, 68, 68, 0.15);
+  --info: #3b82f6;
+  --info-light: rgba(59, 130, 246, 0.15);
+}
+
+[data-theme="dark"] {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-tertiary: #1a1a2e;
+  --bg-elevated: #1e1e32;
+  --bg-hover: rgba(255, 255, 255, 0.04);
+
+  --sidebar-bg: #0e0e16;
+  --sidebar-border: #1a1a2e;
+  --sidebar-hover: rgba(99, 102, 241, 0.08);
+  --sidebar-active: rgba(99, 102, 241, 0.15);
+
+  --text-primary: #f0f0f5;
+  --text-secondary: #a0a0b8;
+  --text-tertiary: #6b6b80;
+  --text-inverse: #0a0a0f;
+
+  --border-primary: #2a2a3e;
+  --border-secondary: #1e1e32;
+  --border-focus: var(--primary);
+
+  --input-bg: #12121a;
+  --input-border: #2a2a3e;
+  --input-hover: #1e1e32;
+
+  --card-bg: #12121a;
+  --card-border: #1e1e32;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+
+  --table-header-bg: #0e0e16;
+  --table-row-hover: rgba(99, 102, 241, 0.04);
+  --table-border: #1e1e32;
+
+  --scrollbar-track: #12121a;
+  --scrollbar-thumb: #2a2a3e;
+
+  --dropdown-bg: #1a1a2e;
+  --dropdown-hover: rgba(99, 102, 241, 0.1);
+  --dropdown-border: #2a2a3e;
+  --dropdown-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="light"] {
+  --bg-primary: #f8f9fc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f3f8;
+  --bg-elevated: #ffffff;
+  --bg-hover: rgba(0, 0, 0, 0.03);
+
+  --sidebar-bg: #ffffff;
+  --sidebar-border: #e8eaf0;
+  --sidebar-hover: rgba(99, 102, 241, 0.06);
+  --sidebar-active: rgba(99, 102, 241, 0.1);
+
+  --text-primary: #1a1a2e;
+  --text-secondary: #5a5a72;
+  --text-tertiary: #8888a0;
+  --text-inverse: #ffffff;
+
+  --border-primary: #e0e2ea;
+  --border-secondary: #ecedf2;
+  --border-focus: var(--primary);
+
+  --input-bg: #ffffff;
+  --input-border: #d8dae2;
+  --input-hover: #f1f3f8;
+
+  --card-bg: #ffffff;
+  --card-border: #e8eaf0;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+
+  --table-header-bg: #f8f9fc;
+  --table-row-hover: rgba(99, 102, 241, 0.04);
+  --table-border: #ecedf2;
+
+  --scrollbar-track: #f1f3f8;
+  --scrollbar-thumb: #d0d2da;
+
+  --dropdown-bg: #ffffff;
+  --dropdown-hover: rgba(99, 102, 241, 0.06);
+  --dropdown-border: #e0e2ea;
+  --dropdown-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -9,7 +111,72 @@
 }
 
 body {
-  font-family: "Inter", system-ui, -apple-system, sans-serif;
+  font-family: var(--font-family);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background 0.2s, color 0.2s;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+::selection {
+  background: var(--primary-light);
+  color: var(--text-primary);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-tertiary);
+}
+
+input,
+textarea,
+select {
+  background-color: var(--input-bg);
+  color: var(--text-primary);
+  border-color: var(--input-border);
+}
+
+select option {
+  background-color: var(--dropdown-bg);
+  color: var(--text-primary);
+}
+
+input[type="date"],
+input[type="time"],
+input[type="month"],
+input[type="datetime-local"] {
+  color-scheme: dark;
+}
+
+[data-theme="light"] input[type="date"],
+[data-theme="light"] input[type="time"],
+[data-theme="light"] input[type="month"],
+[data-theme="light"] input[type="datetime-local"] {
+  color-scheme: light;
+}
+
+mark {
+  background-color: var(--warning-light);
+  color: var(--text-primary);
+  padding: 0 2px;
+  border-radius: 2px;
 }

@@ -50,16 +50,16 @@ const statusParcelaLabels: Record<string, string> = {
 };
 
 const statusParcelaColors: Record<string, string> = {
-  PENDENTE: "bg-yellow-100 text-yellow-700",
-  PAGA: "bg-green-100 text-green-700",
-  ATRASADA: "bg-red-100 text-red-700",
-  CANCELADA: "bg-gray-100 text-gray-500",
+  PENDENTE: "bg-warning-light text-warning",
+  PAGA: "bg-success-light text-success",
+  ATRASADA: "bg-danger-light text-danger",
+  CANCELADA: "bg-theme-bg-tertiary text-theme-text-tertiary",
 };
 
 const prognosticoColors: Record<string, string> = {
-  PROVAVEL: "bg-red-50 border-red-300 text-red-800",
-  POSSIVEL: "bg-yellow-50 border-yellow-300 text-yellow-800",
-  REMOTA: "bg-green-50 border-green-300 text-green-800",
+  PROVAVEL: "bg-danger-light border-red-300 text-danger",
+  POSSIVEL: "bg-warning-light border-yellow-300 text-warning",
+  REMOTA: "bg-success-light border-green-300 text-success",
 };
 
 function formatCurrency(val: string | number | null) {
@@ -167,7 +167,7 @@ export default function TabFinanceiro({ processoId }: { processoId: string }) {
     carregar();
   };
 
-  if (loading) return <p className="text-gray-400">Carregando...</p>;
+  if (loading) return <p className="text-theme-text-tertiary">Carregando...</p>;
 
   const parcelas = financeiro?.parcelas || [];
   const totalPago = parcelas
@@ -179,7 +179,7 @@ export default function TabFinanceiro({ processoId }: { processoId: string }) {
 
   return (
     <div className="space-y-6">
-      <div className={`rounded-lg border-2 p-4 ${prognosticoColors[form.prognostico] || "bg-gray-50 border-gray-200"}`}>
+      <div className={`rounded-lg border-2 p-4 ${prognosticoColors[form.prognostico] || "bg-theme-bg-tertiary border-theme-border-secondary"}`}>
         <div className="flex items-center gap-3">
           <span className="text-2xl">
             {form.prognostico === "PROVAVEL" ? "🔴" : form.prognostico === "POSSIVEL" ? "🟡" : "🟢"}
@@ -195,15 +195,15 @@ export default function TabFinanceiro({ processoId }: { processoId: string }) {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Dados Financeiros do Processo</h3>
+      <div className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-6">
+        <h3 className="text-lg font-semibold text-theme-text-primary mb-4">Dados Financeiros do Processo</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Prognóstico</label>
+            <label className="block text-sm font-medium text-theme-text-secondary mb-1">Prognóstico</label>
             <select
               value={form.prognostico}
               onChange={(e) => setForm((prev) => ({ ...prev, prognostico: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+              className="w-full px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
             >
               {prognosticoOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -211,37 +211,37 @@ export default function TabFinanceiro({ processoId }: { processoId: string }) {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Valor Estimado da Causa (R$)</label>
+            <label className="block text-sm font-medium text-theme-text-secondary mb-1">Valor Estimado da Causa (R$)</label>
             <input
               type="number"
               step="0.01"
               value={form.valorCausaEstimado}
               onChange={(e) => setForm((prev) => ({ ...prev, valorCausaEstimado: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+              className="w-full px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Honorários Contratuais (R$)</label>
+            <label className="block text-sm font-medium text-theme-text-secondary mb-1">Honorários Contratuais (R$)</label>
             <input
               type="number"
               step="0.01"
               value={form.honorariosContrato}
               onChange={(e) => setForm((prev) => ({ ...prev, honorariosContrato: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+              className="w-full px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Honorários de Êxito (R$)</label>
+            <label className="block text-sm font-medium text-theme-text-secondary mb-1">Honorários de Êxito (R$)</label>
             <input
               type="number"
               step="0.01"
               value={form.honorariosExito}
               onChange={(e) => setForm((prev) => ({ ...prev, honorariosExito: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+              className="w-full px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Percentual de Êxito (%)</label>
+            <label className="block text-sm font-medium text-theme-text-secondary mb-1">Percentual de Êxito (%)</label>
             <input
               type="number"
               step="0.01"
@@ -249,15 +249,15 @@ export default function TabFinanceiro({ processoId }: { processoId: string }) {
               max="100"
               value={form.percentualExito}
               onChange={(e) => setForm((prev) => ({ ...prev, percentualExito: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+              className="w-full px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Forma de Pagamento</label>
+            <label className="block text-sm font-medium text-theme-text-secondary mb-1">Forma de Pagamento</label>
             <select
               value={form.formaPagamento}
               onChange={(e) => setForm((prev) => ({ ...prev, formaPagamento: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+              className="w-full px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
             >
               {formaPagamentoOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -266,19 +266,19 @@ export default function TabFinanceiro({ processoId }: { processoId: string }) {
           </div>
         </div>
         <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Observações Financeiras</label>
+          <label className="block text-sm font-medium text-theme-text-secondary mb-1">Observações Financeiras</label>
           <textarea
             value={form.observacoes}
             onChange={(e) => setForm((prev) => ({ ...prev, observacoes: e.target.value }))}
             rows={2}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+            className="w-full px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
           />
         </div>
         <div className="mt-4">
           <button
             onClick={salvar}
             disabled={saving}
-            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors text-sm font-medium"
+            className="bg-accent text-white px-6 py-2 rounded-lg hover:bg-accent-hover disabled:opacity-50 transition-colors text-sm font-medium"
           >
             {saving ? "Salvando..." : "Salvar Dados Financeiros"}
           </button>
@@ -286,68 +286,68 @@ export default function TabFinanceiro({ processoId }: { processoId: string }) {
       </div>
 
       {(form.formaPagamento === "PARCELADO" || form.formaPagamento === "MISTO") && (
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-800">Controle de Parcelas</h3>
+            <h3 className="text-lg font-semibold text-theme-text-primary">Controle de Parcelas</h3>
             <button
               onClick={() => setShowParcelaForm(!showParcelaForm)}
-              className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
+              className="bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent-hover transition-colors text-sm font-medium"
             >
               {showParcelaForm ? "Cancelar" : "+ Nova Parcela"}
             </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
-            <div className="bg-green-50 rounded-lg p-4 text-center">
-              <p className="text-xs text-green-600 uppercase font-semibold">Total Pago</p>
-              <p className="text-xl font-bold text-green-700">{formatCurrency(totalPago)}</p>
+            <div className="bg-success-light rounded-lg p-4 text-center">
+              <p className="text-xs text-success uppercase font-semibold">Total Pago</p>
+              <p className="text-xl font-bold text-success">{formatCurrency(totalPago)}</p>
             </div>
-            <div className="bg-yellow-50 rounded-lg p-4 text-center">
-              <p className="text-xs text-yellow-600 uppercase font-semibold">Total Pendente</p>
-              <p className="text-xl font-bold text-yellow-700">{formatCurrency(totalPendente)}</p>
+            <div className="bg-warning-light rounded-lg p-4 text-center">
+              <p className="text-xs text-warning uppercase font-semibold">Total Pendente</p>
+              <p className="text-xl font-bold text-warning">{formatCurrency(totalPendente)}</p>
             </div>
-            <div className="bg-blue-50 rounded-lg p-4 text-center">
-              <p className="text-xs text-blue-600 uppercase font-semibold">Total Geral</p>
-              <p className="text-xl font-bold text-blue-700">{formatCurrency(totalPago + totalPendente)}</p>
+            <div className="bg-info-light rounded-lg p-4 text-center">
+              <p className="text-xs text-info uppercase font-semibold">Total Geral</p>
+              <p className="text-xl font-bold text-info">{formatCurrency(totalPago + totalPendente)}</p>
             </div>
           </div>
 
           {showParcelaForm && (
-            <div className="bg-gray-50 rounded-lg p-4 mb-4">
+            <div className="bg-theme-bg-tertiary rounded-lg p-4 mb-4">
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">N.o Parcela</label>
+                  <label className="block text-sm font-medium text-theme-text-secondary mb-1">N.o Parcela</label>
                   <input
                     type="number"
                     min="1"
                     value={parcelaForm.numero}
                     onChange={(e) => setParcelaForm((prev) => ({ ...prev, numero: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                    className="w-full px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Valor (R$)</label>
+                  <label className="block text-sm font-medium text-theme-text-secondary mb-1">Valor (R$)</label>
                   <input
                     type="number"
                     step="0.01"
                     value={parcelaForm.valor}
                     onChange={(e) => setParcelaForm((prev) => ({ ...prev, valor: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                    className="w-full px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Vencimento</label>
+                  <label className="block text-sm font-medium text-theme-text-secondary mb-1">Vencimento</label>
                   <input
                     type="date"
                     value={parcelaForm.dataVencimento}
                     onChange={(e) => setParcelaForm((prev) => ({ ...prev, dataVencimento: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                    className="w-full px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
                   />
                 </div>
                 <div className="flex items-end">
                   <button
                     onClick={adicionarParcela}
-                    className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                    className="w-full bg-success text-white px-4 py-2 rounded-lg hover:bg-[#059669] transition-colors text-sm font-medium"
                   >
                     Adicionar
                   </button>
@@ -358,30 +358,30 @@ export default function TabFinanceiro({ processoId }: { processoId: string }) {
 
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-theme-bg-tertiary border-b border-theme-border-secondary">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">N.o</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Valor</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Vencimento</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Pagamento</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Ações</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-theme-text-secondary uppercase">N.o</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-theme-text-secondary uppercase">Valor</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-theme-text-secondary uppercase">Vencimento</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-theme-text-secondary uppercase">Pagamento</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-theme-text-secondary uppercase">Status</th>
+                  <th className="px-4 py-3 text-right text-xs font-semibold text-theme-text-secondary uppercase">Ações</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-100">
+              <tbody className="divide-y divide-theme-table-border">
                 {parcelas.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-gray-400">
+                    <td colSpan={6} className="px-4 py-8 text-center text-theme-text-tertiary">
                       Nenhuma parcela cadastrada
                     </td>
                   </tr>
                 ) : (
                   parcelas.map((p) => (
-                    <tr key={p.id} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 text-sm text-gray-700">{p.numero}</td>
-                      <td className="px-4 py-3 text-sm font-medium text-gray-800">{formatCurrency(p.valor)}</td>
-                      <td className="px-4 py-3 text-sm text-gray-700">{formatDate(p.dataVencimento)}</td>
-                      <td className="px-4 py-3 text-sm text-gray-700">
+                    <tr key={p.id} className="hover:bg-theme-bg-tertiary">
+                      <td className="px-4 py-3 text-sm text-theme-text-secondary">{p.numero}</td>
+                      <td className="px-4 py-3 text-sm font-medium text-theme-text-primary">{formatCurrency(p.valor)}</td>
+                      <td className="px-4 py-3 text-sm text-theme-text-secondary">{formatDate(p.dataVencimento)}</td>
+                      <td className="px-4 py-3 text-sm text-theme-text-secondary">
                         {p.dataPagamento ? formatDate(p.dataPagamento) : "—"}
                       </td>
                       <td className="px-4 py-3">
@@ -393,14 +393,14 @@ export default function TabFinanceiro({ processoId }: { processoId: string }) {
                         {(p.status === "PENDENTE" || p.status === "ATRASADA") && (
                           <button
                             onClick={() => marcarPaga(p)}
-                            className="text-green-600 hover:text-green-800 text-sm font-medium"
+                            className="text-success hover:text-success text-sm font-medium"
                           >
                             Pagar
                           </button>
                         )}
                         <button
                           onClick={() => excluirParcela(p)}
-                          className="text-red-500 hover:text-red-700 text-sm font-medium"
+                          className="text-danger hover:text-danger text-sm font-medium"
                         >
                           Excluir
                         </button>

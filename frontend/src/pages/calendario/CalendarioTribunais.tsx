@@ -11,11 +11,11 @@ interface Evento {
 }
 
 const tipoEventoColors: Record<string, string> = {
-  Recesso: "bg-blue-100 text-blue-700 border-blue-300",
-  Feriado: "bg-red-100 text-red-700 border-red-300",
-  "Suspensão de Prazos": "bg-amber-100 text-amber-700 border-amber-300",
-  Plantão: "bg-green-100 text-green-700 border-green-300",
-  Mutirão: "bg-purple-100 text-purple-700 border-purple-300",
+  Recesso: "bg-info-light text-info border-blue-300",
+  Feriado: "bg-danger-light text-danger border-red-300",
+  "Suspensão de Prazos": "bg-warning-light text-warning border-amber-300",
+  Plantão: "bg-success-light text-success border-green-300",
+  Mutirão: "bg-[rgba(139,92,246,0.15)] text-[#8b5cf6] border-purple-300",
 };
 
 const diasSemana = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -109,41 +109,41 @@ export default function CalendarioTribunais() {
     dia === hoje.getDate() && mesAtual === hoje.getMonth() && anoAtual === hoje.getFullYear();
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><p className="text-gray-400 text-lg">Carregando...</p></div>;
+    return <div className="flex items-center justify-center h-64"><p className="text-theme-text-tertiary text-lg">Carregando...</p></div>;
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Calendário dos Tribunais</h2>
+        <h2 className="text-2xl font-bold text-theme-text-primary">Calendário dos Tribunais</h2>
         <button
           onClick={() => setShowForm(!showForm)}
-          className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
+          className="bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent-hover transition-colors text-sm font-medium"
         >
           {showForm ? "Cancelar" : "Novo Evento"}
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 mb-6">
+        <form onSubmit={handleSubmit} className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tribunal *</label>
+              <label className="block text-sm font-medium text-theme-text-secondary mb-1">Tribunal *</label>
               <input
                 type="text"
                 value={form.tribunal}
                 onChange={(e) => setForm({ ...form, tribunal: e.target.value })}
                 placeholder="Ex: TJ-SP, TRF-3, TST"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Tipo *</label>
+              <label className="block text-sm font-medium text-theme-text-secondary mb-1">Tipo *</label>
               <select
                 value={form.tipo}
                 onChange={(e) => setForm({ ...form, tipo: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
               >
                 {tiposEvento.map((t) => (
                   <option key={t} value={t}>{t}</option>
@@ -151,38 +151,38 @@ export default function CalendarioTribunais() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Descrição *</label>
+              <label className="block text-sm font-medium text-theme-text-secondary mb-1">Descrição *</label>
               <input
                 type="text"
                 value={form.descricao}
                 onChange={(e) => setForm({ ...form, descricao: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Data Início *</label>
+              <label className="block text-sm font-medium text-theme-text-secondary mb-1">Data Início *</label>
               <input
                 type="date"
                 value={form.dataInicio}
                 onChange={(e) => setForm({ ...form, dataInicio: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Data Fim *</label>
+              <label className="block text-sm font-medium text-theme-text-secondary mb-1">Data Fim *</label>
               <input
                 type="date"
                 value={form.dataFim}
                 onChange={(e) => setForm({ ...form, dataFim: e.target.value })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
                 required
               />
             </div>
           </div>
           <div className="flex justify-end mt-4">
-            <button type="submit" className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium">
+            <button type="submit" className="bg-accent text-white px-6 py-2 rounded-lg hover:bg-accent-hover transition-colors text-sm font-medium">
               Salvar
             </button>
           </div>
@@ -192,16 +192,16 @@ export default function CalendarioTribunais() {
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <button
           onClick={() => navegarMes(-1)}
-          className="bg-gray-200 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-300 transition-colors text-sm"
+          className="bg-theme-bg-tertiary text-theme-text-secondary px-3 py-2 rounded-lg hover:bg-theme-bg-hover transition-colors text-sm"
         >
           &lt; Anterior
         </button>
-        <h3 className="text-lg font-semibold text-gray-800 min-w-[200px] text-center">
+        <h3 className="text-lg font-semibold text-theme-text-primary min-w-[200px] text-center">
           {mesesNome[mesAtual]} {anoAtual}
         </h3>
         <button
           onClick={() => navegarMes(1)}
-          className="bg-gray-200 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-300 transition-colors text-sm"
+          className="bg-theme-bg-tertiary text-theme-text-secondary px-3 py-2 rounded-lg hover:bg-theme-bg-hover transition-colors text-sm"
         >
           Próximo &gt;
         </button>
@@ -209,7 +209,7 @@ export default function CalendarioTribunais() {
           <select
             value={filtroTribunal}
             onChange={(e) => setFiltroTribunal(e.target.value)}
-            className="ml-auto border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            className="ml-auto border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
           >
             <option value="">Todos os tribunais</option>
             {tribunais.map((t) => (
@@ -219,15 +219,15 @@ export default function CalendarioTribunais() {
         )}
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-theme-card-bg rounded-lg shadow overflow-hidden">
         <div className="grid grid-cols-7">
           {diasSemana.map((d) => (
-            <div key={d} className="bg-gray-50 text-center py-2 text-xs font-semibold text-gray-600 border-b">
+            <div key={d} className="bg-theme-bg-tertiary text-center py-2 text-xs font-semibold text-theme-text-secondary border-b">
               {d}
             </div>
           ))}
           {Array.from({ length: primeiroDia }).map((_, i) => (
-            <div key={`empty-${i}`} className="bg-gray-50 min-h-[100px] border-b border-r" />
+            <div key={`empty-${i}`} className="bg-theme-bg-tertiary min-h-[100px] border-b border-r" />
           ))}
           {Array.from({ length: totalDias }).map((_, i) => {
             const dia = i + 1;
@@ -236,12 +236,12 @@ export default function CalendarioTribunais() {
               <div
                 key={dia}
                 className={`min-h-[100px] border-b border-r p-1 ${
-                  isHoje(dia) ? "bg-primary-50" : ""
+                  isHoje(dia) ? "bg-accent-subtle" : ""
                 }`}
               >
                 <span
                   className={`text-xs font-medium inline-block w-6 h-6 text-center leading-6 rounded-full ${
-                    isHoje(dia) ? "bg-primary-600 text-white" : "text-gray-600"
+                    isHoje(dia) ? "bg-accent text-white" : "text-theme-text-secondary"
                   }`}
                 >
                   {dia}
@@ -251,7 +251,7 @@ export default function CalendarioTribunais() {
                     <div
                       key={e.id}
                       className={`text-[10px] px-1 py-0.5 rounded truncate border cursor-default ${
-                        tipoEventoColors[e.tipo] || "bg-gray-100 text-gray-600 border-gray-300"
+                        tipoEventoColors[e.tipo] || "bg-theme-bg-tertiary text-theme-text-secondary border-theme-border-primary"
                       }`}
                       title={`${e.tribunal} - ${e.descricao}`}
                     >
@@ -259,7 +259,7 @@ export default function CalendarioTribunais() {
                     </div>
                   ))}
                   {eventosHoje.length > 3 && (
-                    <p className="text-[10px] text-gray-400 px-1">+{eventosHoje.length - 3} mais</p>
+                    <p className="text-[10px] text-theme-text-tertiary px-1">+{eventosHoje.length - 3} mais</p>
                   )}
                 </div>
               </div>
@@ -270,28 +270,28 @@ export default function CalendarioTribunais() {
 
       {eventos.length > 0 && (
         <div className="mt-6">
-          <h3 className="text-lg font-semibold text-gray-800 mb-3">Eventos do Mês</h3>
+          <h3 className="text-lg font-semibold text-theme-text-primary mb-3">Eventos do Mês</h3>
           <div className="space-y-2">
             {eventos.map((e) => (
               <div
                 key={e.id}
-                className={`bg-white rounded-lg shadow p-4 flex items-center justify-between border-l-4 ${
+                className={`bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-4 flex items-center justify-between border-l-4 ${
                   tipoEventoColors[e.tipo]?.includes("border")
-                    ? tipoEventoColors[e.tipo]?.split(" ").find((c) => c.startsWith("border-")) || "border-gray-300"
-                    : "border-gray-300"
+                    ? tipoEventoColors[e.tipo]?.split(" ").find((c) => c.startsWith("border-")) || "border-theme-border-primary"
+                    : "border-theme-border-primary"
                 }`}
               >
                 <div className="flex items-center gap-4">
                   <div>
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                      tipoEventoColors[e.tipo]?.split(" border")[0] || "bg-gray-100 text-gray-600"
+                      tipoEventoColors[e.tipo]?.split(" border")[0] || "bg-theme-bg-tertiary text-theme-text-secondary"
                     }`}>
                       {e.tipo}
                     </span>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-gray-800">{e.descricao}</p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-sm font-semibold text-theme-text-primary">{e.descricao}</p>
+                    <p className="text-xs text-theme-text-tertiary">
                       {e.tribunal} | {new Date(e.dataInicio).toLocaleDateString("pt-BR")}
                       {" — "}
                       {new Date(e.dataFim).toLocaleDateString("pt-BR")}
@@ -300,7 +300,7 @@ export default function CalendarioTribunais() {
                 </div>
                 <button
                   onClick={() => excluir(e.id)}
-                  className="text-xs bg-red-100 text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-200 transition-colors"
+                  className="text-xs bg-danger-light text-danger px-3 py-1.5 rounded-lg hover:bg-danger-light transition-colors"
                 >
                   Excluir
                 </button>
@@ -314,7 +314,7 @@ export default function CalendarioTribunais() {
         {Object.entries(tipoEventoColors).map(([tipo, classes]) => (
           <div key={tipo} className="flex items-center gap-1.5">
             <div className={`w-3 h-3 rounded ${classes.split(" ")[0]}`} />
-            <span className="text-xs text-gray-600">{tipo}</span>
+            <span className="text-xs text-theme-text-secondary">{tipo}</span>
           </div>
         ))}
       </div>

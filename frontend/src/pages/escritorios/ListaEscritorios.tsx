@@ -47,7 +47,7 @@ export default function ListaEscritorios() {
       <PageHeader title="Escritórios" createLink="/escritorios/novo" createLabel="Novo Escritório" />
       <SearchBar value={busca} onChange={setBusca} placeholder="Buscar por nome ou CNPJ..." />
       {loading ? (
-        <p className="text-gray-400">Carregando...</p>
+        <p className="text-theme-text-tertiary">Carregando...</p>
       ) : (
         <DataTable
           columns={[
@@ -64,7 +64,7 @@ export default function ListaEscritorios() {
               key: "ativo",
               label: "Status",
               render: (e) => (
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${e.ativo ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>
+                <span className={`px-2 py-1 rounded-full text-xs font-medium ${e.ativo ? "bg-success-light text-success" : "bg-danger-light text-danger"}`}>
                   {e.ativo ? "Ativo" : "Inativo"}
                 </span>
               ),

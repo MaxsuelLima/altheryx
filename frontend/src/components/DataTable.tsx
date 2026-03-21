@@ -1,3 +1,5 @@
+import { Pencil, Trash2 } from "lucide-react";
+
 interface Column<T> {
   key: keyof T | string;
   label: string;
@@ -18,64 +20,68 @@ export default function DataTable<T extends { id: string }>({
   onDelete,
 }: DataTableProps<T>) {
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className="rounded-xl border border-theme-card-border bg-theme-card-bg shadow-card overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
+          <thead>
+            <tr className="border-b border-theme-table-border bg-theme-table-header">
               {columns.map((col) => (
                 <th
                   key={String(col.key)}
-                  className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                  className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-theme-text-tertiary"
                 >
                   {col.label}
                 </th>
               ))}
               {(onEdit || onDelete) && (
-                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-theme-text-tertiary w-24">
                   Ações
                 </th>
               )}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-theme-table-border">
             {data.length === 0 ? (
               <tr>
                 <td
                   colSpan={columns.length + (onEdit || onDelete ? 1 : 0)}
-                  className="px-4 py-8 text-center text-gray-400"
+                  className="px-4 py-12 text-center text-theme-text-tertiary text-sm"
                 >
                   Nenhum registro encontrado
                 </td>
               </tr>
             ) : (
               data.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50 transition-colors">
+                <tr key={item.id} className="hover:bg-theme-table-hover transition-colors">
                   {columns.map((col) => (
-                    <td key={String(col.key)} className="px-4 py-3 text-sm text-gray-700">
+                    <td key={String(col.key)} className="px-4 py-3 text-sm text-theme-text-secondary">
                       {col.render
                         ? col.render(item)
                         : String((item as Record<string, unknown>)[String(col.key)] ?? "")}
                     </td>
                   ))}
                   {(onEdit || onDelete) && (
-                    <td className="px-4 py-3 text-right space-x-2">
-                      {onEdit && (
-                        <button
-                          onClick={() => onEdit(item)}
-                          className="text-primary-600 hover:text-primary-800 text-sm font-medium"
-                        >
-                          Editar
-                        </button>
-                      )}
-                      {onDelete && (
-                        <button
-                          onClick={() => onDelete(item)}
-                          className="text-red-500 hover:text-red-700 text-sm font-medium"
-                        >
-                          Excluir
-                        </button>
-                      )}
+                    <td className="px-4 py-3 text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        {onEdit && (
+                          <button
+                            onClick={() => onEdit(item)}
+                            className="p-1.5 rounded-lg text-theme-text-tertiary hover:text-accent hover:bg-accent-subtle transition-colors"
+                            title="Editar"
+                          >
+                            <Pencil size={15} />
+                          </button>
+                        )}
+                        {onDelete && (
+                          <button
+                            onClick={() => onDelete(item)}
+                            className="p-1.5 rounded-lg text-theme-text-tertiary hover:text-danger hover:bg-danger-light transition-colors"
+                            title="Excluir"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
+                      </div>
                     </td>
                   )}
                 </tr>

@@ -58,38 +58,38 @@ export default function FormProcuracao() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">
+      <h2 className="text-2xl font-bold text-theme-text-primary mb-6">
         {editando ? "Editar Procuração" : "Nova Procuração"}
       </h2>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 max-w-3xl">
+      <form onSubmit={handleSubmit} className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-6 max-w-3xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Outorgante *</label>
+            <label className="block text-sm font-medium text-theme-text-secondary mb-1">Outorgante *</label>
             <input
               type="text"
               value={form.outorgante}
               onChange={(e) => setForm({ ...form, outorgante: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Outorgado *</label>
+            <label className="block text-sm font-medium text-theme-text-secondary mb-1">Outorgado *</label>
             <input
               type="text"
               value={form.outorgado}
               onChange={(e) => setForm({ ...form, outorgado: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Processo Vinculado</label>
+            <label className="block text-sm font-medium text-theme-text-secondary mb-1">Processo Vinculado</label>
             <select
               value={form.processoId}
               onChange={(e) => setForm({ ...form, processoId: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
             >
               <option value="">Nenhum</option>
               {processos.map((p) => (
@@ -98,11 +98,11 @@ export default function FormProcuracao() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <label className="block text-sm font-medium text-theme-text-secondary mb-1">Status</label>
             <select
               value={form.status}
               onChange={(e) => setForm({ ...form, status: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
             >
               <option value="VIGENTE">Vigente</option>
               <option value="VENCIDA">Vencida</option>
@@ -110,42 +110,42 @@ export default function FormProcuracao() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Data de Emissão *</label>
+            <label className="block text-sm font-medium text-theme-text-secondary mb-1">Data de Emissão *</label>
             <input
               type="date"
               value={form.dataEmissao}
               onChange={(e) => setForm({ ...form, dataEmissao: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
               required
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Data de Validade</label>
+            <label className="block text-sm font-medium text-theme-text-secondary mb-1">Data de Validade</label>
             <input
               type="date"
               value={form.dataValidade}
               onChange={(e) => setForm({ ...form, dataValidade: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
             />
           </div>
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Poderes Conferidos *</label>
+            <label className="block text-sm font-medium text-theme-text-secondary mb-1">Poderes Conferidos *</label>
             <textarea
               value={form.poderes}
               onChange={(e) => setForm({ ...form, poderes: e.target.value })}
               rows={4}
               placeholder="Descreva os poderes conferidos na procuração..."
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
               required
             />
           </div>
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Observações</label>
+            <label className="block text-sm font-medium text-theme-text-secondary mb-1">Observações</label>
             <textarea
               value={form.observacoes}
               onChange={(e) => setForm({ ...form, observacoes: e.target.value })}
               rows={2}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
             />
           </div>
         </div>
@@ -153,14 +153,14 @@ export default function FormProcuracao() {
         <div className="flex gap-3 mt-6">
           <button
             type="submit"
-            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
+            className="bg-accent text-white px-6 py-2 rounded-lg hover:bg-accent-hover transition-colors text-sm font-medium"
           >
             {editando ? "Atualizar" : "Salvar"}
           </button>
           <button
             type="button"
             onClick={() => navigate("/procuracoes")}
-            className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+            className="bg-theme-bg-tertiary text-theme-text-secondary px-6 py-2 rounded-lg hover:bg-theme-bg-hover transition-colors text-sm font-medium"
           >
             Cancelar
           </button>

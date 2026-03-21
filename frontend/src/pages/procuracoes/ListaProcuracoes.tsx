@@ -26,9 +26,9 @@ const statusLabels: Record<string, string> = {
 };
 
 const statusColors: Record<string, string> = {
-  VIGENTE: "bg-green-100 text-green-700",
-  VENCIDA: "bg-red-100 text-red-700",
-  REVOGADA: "bg-gray-100 text-gray-600",
+  VIGENTE: "bg-success-light text-success",
+  VENCIDA: "bg-danger-light text-danger",
+  REVOGADA: "bg-theme-bg-tertiary text-theme-text-secondary",
 };
 
 export default function ListaProcuracoes() {
@@ -66,16 +66,16 @@ export default function ListaProcuracoes() {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><p className="text-gray-400 text-lg">Carregando...</p></div>;
+    return <div className="flex items-center justify-center h-64"><p className="text-theme-text-tertiary text-lg">Carregando...</p></div>;
   }
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Procurações</h2>
+        <h2 className="text-2xl font-bold text-theme-text-primary">Procurações</h2>
         <button
           onClick={() => navigate("/procuracoes/novo")}
-          className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
+          className="bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent-hover transition-colors text-sm font-medium"
         >
           Nova Procuração
         </button>
@@ -88,30 +88,30 @@ export default function ListaProcuracoes() {
           </h3>
           <div className="space-y-2">
             {alertas.map((a) => (
-              <div key={a.id} className="flex items-center justify-between bg-white rounded-lg px-4 py-2 border border-amber-100">
+              <div key={a.id} className="flex items-center justify-between bg-theme-input-bg rounded-lg px-4 py-2 border border-amber-100">
                 <div>
-                  <span className="text-sm font-medium text-gray-800">
+                  <span className="text-sm font-medium text-theme-text-primary">
                     {a.outorgante} → {a.outorgado}
                   </span>
                   {a.processo && (
-                    <span className="text-xs text-gray-500 ml-2">({a.processo.numeroProcesso})</span>
+                    <span className="text-xs text-theme-text-tertiary ml-2">({a.processo.numeroProcesso})</span>
                   )}
                 </div>
                 <div className="flex items-center gap-3">
                   {a.vencida ? (
-                    <span className="px-2 py-1 rounded text-xs font-medium bg-red-500 text-white">
+                    <span className="px-2 py-1 rounded text-xs font-medium bg-danger-light0 text-white">
                       Vencida
                     </span>
                   ) : (
                     <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      (a.diasRestantes ?? 0) <= 7 ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700"
+                      (a.diasRestantes ?? 0) <= 7 ? "bg-danger-light text-danger" : "bg-warning-light text-warning"
                     }`}>
                       {a.diasRestantes} dias restantes
                     </span>
                   )}
                   <button
                     onClick={() => navigate(`/procuracoes/${a.id}`)}
-                    className="text-xs text-primary-600 hover:text-primary-800 font-medium"
+                    className="text-xs text-accent hover:text-accent-hover font-medium"
                   >
                     Editar
                   </button>
@@ -128,12 +128,12 @@ export default function ListaProcuracoes() {
           placeholder="Buscar por outorgante, outorgado ou poderes..."
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
-          className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          className="flex-1 border border-theme-border-primary rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
         />
         <select
           value={filtroStatus}
           onChange={(e) => setFiltroStatus(e.target.value)}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          className="border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
         >
           <option value="">Todos os status</option>
           {Object.entries(statusLabels).map(([k, v]) => (
@@ -143,24 +143,24 @@ export default function ListaProcuracoes() {
       </div>
 
       {procuracoes.length === 0 ? (
-        <div className="bg-white rounded-lg shadow p-12 text-center">
-          <p className="text-gray-400 text-lg">Nenhuma procuração encontrada</p>
+        <div className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-12 text-center">
+          <p className="text-theme-text-tertiary text-lg">Nenhuma procuração encontrada</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-theme-card-bg rounded-lg shadow overflow-hidden">
           <table className="w-full">
-            <thead className="bg-gray-50">
+            <thead className="bg-theme-bg-tertiary">
               <tr>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase">Outorgante</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase">Outorgado</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase">Processo</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase">Emissão</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase">Validade</th>
-                <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 uppercase">Status</th>
-                <th className="text-right px-4 py-3 text-xs font-semibold text-gray-600 uppercase">Ações</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-theme-text-secondary uppercase">Outorgante</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-theme-text-secondary uppercase">Outorgado</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-theme-text-secondary uppercase">Processo</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-theme-text-secondary uppercase">Emissão</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-theme-text-secondary uppercase">Validade</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-theme-text-secondary uppercase">Status</th>
+                <th className="text-right px-4 py-3 text-xs font-semibold text-theme-text-secondary uppercase">Ações</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-theme-table-border">
               {procuracoes.map((p) => {
                 const hoje = new Date();
                 const venceEm30 =
@@ -169,17 +169,17 @@ export default function ListaProcuracoes() {
                   new Date(p.dataValidade).getTime() - hoje.getTime() < 30 * 24 * 60 * 60 * 1000;
 
                 return (
-                  <tr key={p.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 text-sm text-gray-800">{p.outorgante}</td>
-                    <td className="px-4 py-3 text-sm text-gray-800">{p.outorgado}</td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                  <tr key={p.id} className="hover:bg-theme-bg-tertiary">
+                    <td className="px-4 py-3 text-sm text-theme-text-primary">{p.outorgante}</td>
+                    <td className="px-4 py-3 text-sm text-theme-text-primary">{p.outorgado}</td>
+                    <td className="px-4 py-3 text-sm text-theme-text-secondary">
                       {p.processo?.numeroProcesso || "—"}
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-600">
+                    <td className="px-4 py-3 text-sm text-theme-text-secondary">
                       {new Date(p.dataEmissao).toLocaleDateString("pt-BR")}
                     </td>
                     <td className="px-4 py-3 text-sm">
-                      <span className={venceEm30 ? "text-amber-600 font-medium" : "text-gray-600"}>
+                      <span className={venceEm30 ? "text-warning font-medium" : "text-theme-text-secondary"}>
                         {p.dataValidade
                           ? new Date(p.dataValidade).toLocaleDateString("pt-BR")
                           : "Indeterminada"}
@@ -197,13 +197,13 @@ export default function ListaProcuracoes() {
                       <div className="flex gap-2 justify-end">
                         <button
                           onClick={() => navigate(`/procuracoes/${p.id}`)}
-                          className="text-xs bg-primary-100 text-primary-700 px-3 py-1.5 rounded-lg hover:bg-primary-200 transition-colors"
+                          className="text-xs bg-accent-light text-accent-hover px-3 py-1.5 rounded-lg hover:bg-accent-light transition-colors"
                         >
                           Editar
                         </button>
                         <button
                           onClick={() => excluir(p.id)}
-                          className="text-xs bg-red-100 text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-200 transition-colors"
+                          className="text-xs bg-danger-light text-danger px-3 py-1.5 rounded-lg hover:bg-danger-light transition-colors"
                         >
                           Excluir
                         </button>

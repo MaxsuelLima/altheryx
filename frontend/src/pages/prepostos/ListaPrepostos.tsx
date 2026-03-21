@@ -46,7 +46,7 @@ export default function ListaPrepostos() {
       <PageHeader title="Prepostos" createLink="/prepostos/novo" createLabel="Novo Preposto" />
       <SearchBar value={busca} onChange={setBusca} placeholder="Buscar por nome, CPF ou empresa..." />
       {loading ? (
-        <p className="text-gray-400">Carregando...</p>
+        <p className="text-theme-text-tertiary">Carregando...</p>
       ) : (
         <DataTable
           columns={[

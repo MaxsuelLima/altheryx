@@ -79,11 +79,11 @@ export default function FormCliente() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">
+      <h2 className="text-2xl font-bold text-theme-text-primary mb-6">
         {isEdit ? "Editar Cliente" : "Novo Cliente"}
       </h2>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 max-w-3xl">
+      <form onSubmit={handleSubmit} className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-6 max-w-3xl">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField label="Nome" name="nome" value={form.nome} onChange={handleChange} required />
           <FormField label="CPF/CNPJ" name="cpfCnpj" value={form.cpfCnpj} onChange={handleChange} required />
@@ -102,14 +102,14 @@ export default function FormCliente() {
           <button
             type="submit"
             disabled={loading}
-            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors text-sm font-medium"
+            className="bg-accent text-white px-6 py-2 rounded-lg hover:bg-accent-hover disabled:opacity-50 transition-colors text-sm font-medium"
           >
             {loading ? "Salvando..." : "Salvar"}
           </button>
           <button
             type="button"
             onClick={() => navigate("/clientes")}
-            className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+            className="bg-theme-bg-tertiary text-theme-text-secondary px-6 py-2 rounded-lg hover:bg-theme-bg-hover transition-colors text-sm font-medium"
           >
             Cancelar
           </button>

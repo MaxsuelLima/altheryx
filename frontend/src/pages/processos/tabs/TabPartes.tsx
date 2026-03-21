@@ -21,10 +21,10 @@ const tipoParteLabels: Record<string, string> = {
 };
 
 const tipoParteColors: Record<string, string> = {
-  AUTOR: "bg-blue-100 text-blue-700",
-  REU: "bg-red-100 text-red-700",
-  TERCEIRO_INTERESSADO: "bg-yellow-100 text-yellow-700",
-  ASSISTENTE: "bg-gray-100 text-gray-600",
+  AUTOR: "bg-info-light text-info",
+  REU: "bg-danger-light text-danger",
+  TERCEIRO_INTERESSADO: "bg-warning-light text-warning",
+  ASSISTENTE: "bg-theme-bg-tertiary text-theme-text-secondary",
 };
 
 const tipoOptions = [
@@ -72,13 +72,13 @@ export default function TabPartes({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Adicionar Parte</h3>
+      <div className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-6">
+        <h3 className="text-lg font-semibold text-theme-text-primary mb-4">Adicionar Parte</h3>
         <div className="flex flex-col sm:flex-row gap-3">
           <select
             value={clienteId}
             onChange={(e) => setClienteId(e.target.value)}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+            className="flex-1 px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
           >
             <option value="">Selecione um cliente...</option>
             {clientes.map((c) => (
@@ -90,7 +90,7 @@ export default function TabPartes({
           <select
             value={tipoParte}
             onChange={(e) => setTipoParte(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+            className="px-3 py-2 border border-theme-border-primary rounded-lg text-sm focus:ring-2 focus:ring-accent-light outline-none"
           >
             {tipoOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
@@ -99,35 +99,35 @@ export default function TabPartes({
           <button
             onClick={adicionar}
             disabled={adding || !clienteId}
-            className="bg-primary-600 text-white px-4 py-2 rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors text-sm font-medium whitespace-nowrap"
+            className="bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent-hover disabled:opacity-50 transition-colors text-sm font-medium whitespace-nowrap"
           >
             Adicionar
           </button>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
+      <div className="bg-theme-card-bg rounded-lg shadow overflow-hidden">
         <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-theme-bg-tertiary border-b border-theme-border-secondary">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Nome</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">CPF/CNPJ</th>
-              <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Tipo</th>
-              <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase">Ações</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-theme-text-secondary uppercase">Nome</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-theme-text-secondary uppercase">CPF/CNPJ</th>
+              <th className="px-4 py-3 text-left text-xs font-semibold text-theme-text-secondary uppercase">Tipo</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold text-theme-text-secondary uppercase">Ações</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-theme-table-border">
             {partes.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-gray-400">
+                <td colSpan={4} className="px-4 py-8 text-center text-theme-text-tertiary">
                   Nenhuma parte adicionada
                 </td>
               </tr>
             ) : (
               partes.map((p) => (
-                <tr key={p.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 text-sm text-gray-700">{p.cliente.nome}</td>
-                  <td className="px-4 py-3 text-sm text-gray-700">{p.cliente.cpfCnpj}</td>
+                <tr key={p.id} className="hover:bg-theme-bg-tertiary">
+                  <td className="px-4 py-3 text-sm text-theme-text-secondary">{p.cliente.nome}</td>
+                  <td className="px-4 py-3 text-sm text-theme-text-secondary">{p.cliente.cpfCnpj}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${tipoParteColors[p.tipoParte] || ""}`}>
                       {tipoParteLabels[p.tipoParte] || p.tipoParte}
@@ -136,7 +136,7 @@ export default function TabPartes({
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => remover(p.id, p.cliente.nome)}
-                      className="text-red-500 hover:text-red-700 text-sm font-medium"
+                      className="text-danger hover:text-danger text-sm font-medium"
                     >
                       Remover
                     </button>
