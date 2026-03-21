@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { api } from "../../lib/api";
 import PageHeader from "../../components/PageHeader";
 import SearchBar from "../../components/SearchBar";
 import DataTable from "../../components/DataTable";
+import Modal from "../../components/ui/Modal";
+import FormCliente from "./FormCliente";
 
 interface Cliente {
   id: string;
@@ -20,7 +21,8 @@ export default function ListaClientes() {
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [busca, setBusca] = useState("");
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
 
   const carregar = () => {
     setLoading(true);
@@ -41,9 +43,24 @@ export default function ListaClientes() {
     carregar();
   };
 
+  const abrirModal = (id?: string) => {
+    setEditId(id || null);
+    setModalOpen(true);
+  };
+
+  const fecharModal = () => {
+    setModalOpen(false);
+    setEditId(null);
+  };
+
+  const onSuccess = () => {
+    fecharModal();
+    carregar();
+  };
+
   return (
     <div>
-      <PageHeader title="Clientes" createLink="/clientes/novo" createLabel="Novo Cliente" />
+      <PageHeader title="Clientes" onCreate={() => abrirModal()} createLabel="Novo Cliente" />
       <SearchBar value={busca} onChange={setBusca} placeholder="Buscar por nome, CPF/CNPJ ou e-mail..." />
       {loading ? (
         <p className="text-theme-text-tertiary">Carregando...</p>
@@ -70,10 +87,14 @@ export default function ListaClientes() {
             },
           ]}
           data={clientes}
-          onEdit={(c) => navigate(`/clientes/${c.id}`)}
+          onEdit={(c) => abrirModal(c.id)}
           onDelete={excluir}
         />
       )}
+
+      <Modal open={modalOpen} onClose={fecharModal} title={editId ? "Editar Cliente" : "Novo Cliente"}>
+        <FormCliente editId={editId} onClose={fecharModal} onSuccess={onSuccess} />
+      </Modal>
     </div>
   );
 }

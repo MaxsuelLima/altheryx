@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { api } from "../../lib/api";
 import PageHeader from "../../components/PageHeader";
 import SearchBar from "../../components/SearchBar";
 import DataTable from "../../components/DataTable";
+import Modal from "../../components/ui/Modal";
+import FormPreposto from "./FormPreposto";
 
 interface Preposto {
   id: string;
@@ -20,7 +21,8 @@ export default function ListaPrepostos() {
   const [prepostos, setPrepostos] = useState<Preposto[]>([]);
   const [busca, setBusca] = useState("");
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
 
   const carregar = () => {
     setLoading(true);
@@ -41,9 +43,13 @@ export default function ListaPrepostos() {
     carregar();
   };
 
+  const abrirModal = (id?: string) => { setEditId(id || null); setModalOpen(true); };
+  const fecharModal = () => { setModalOpen(false); setEditId(null); };
+  const onSuccess = () => { fecharModal(); carregar(); };
+
   return (
     <div>
-      <PageHeader title="Prepostos" createLink="/prepostos/novo" createLabel="Novo Preposto" />
+      <PageHeader title="Prepostos" onCreate={() => abrirModal()} createLabel="Novo Preposto" />
       <SearchBar value={busca} onChange={setBusca} placeholder="Buscar por nome, CPF ou empresa..." />
       {loading ? (
         <p className="text-theme-text-tertiary">Carregando...</p>
@@ -59,10 +65,14 @@ export default function ListaPrepostos() {
             { key: "_count", label: "Processos", render: (p: Preposto) => p._count.processos },
           ]}
           data={prepostos}
-          onEdit={(p) => navigate(`/prepostos/${p.id}`)}
+          onEdit={(p) => abrirModal(p.id)}
           onDelete={excluir}
         />
       )}
+
+      <Modal open={modalOpen} onClose={fecharModal} title={editId ? "Editar Preposto" : "Novo Preposto"}>
+        <FormPreposto editId={editId} onClose={fecharModal} onSuccess={onSuccess} />
+      </Modal>
     </div>
   );
 }

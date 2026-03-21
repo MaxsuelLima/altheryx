@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { api } from "../../lib/api";
 import PageHeader from "../../components/PageHeader";
 import SearchBar from "../../components/SearchBar";
 import DataTable from "../../components/DataTable";
+import Modal from "../../components/ui/Modal";
+import FormTestemunha from "./FormTestemunha";
 
 interface Testemunha {
   id: string;
@@ -18,7 +19,8 @@ export default function ListaTestemunhas() {
   const [testemunhas, setTestemunhas] = useState<Testemunha[]>([]);
   const [busca, setBusca] = useState("");
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
 
   const carregar = () => {
     setLoading(true);
@@ -39,9 +41,13 @@ export default function ListaTestemunhas() {
     carregar();
   };
 
+  const abrirModal = (id?: string) => { setEditId(id || null); setModalOpen(true); };
+  const fecharModal = () => { setModalOpen(false); setEditId(null); };
+  const onSuccess = () => { fecharModal(); carregar(); };
+
   return (
     <div>
-      <PageHeader title="Testemunhas" createLink="/testemunhas/novo" createLabel="Nova Testemunha" />
+      <PageHeader title="Testemunhas" onCreate={() => abrirModal()} createLabel="Nova Testemunha" />
       <SearchBar value={busca} onChange={setBusca} placeholder="Buscar por nome ou CPF..." />
       {loading ? (
         <p className="text-theme-text-tertiary">Carregando...</p>
@@ -55,10 +61,14 @@ export default function ListaTestemunhas() {
             { key: "telefone", label: "Telefone" },
           ]}
           data={testemunhas}
-          onEdit={(t) => navigate(`/testemunhas/${t.id}`)}
+          onEdit={(t) => abrirModal(t.id)}
           onDelete={excluir}
         />
       )}
+
+      <Modal open={modalOpen} onClose={fecharModal} title={editId ? "Editar Testemunha" : "Nova Testemunha"}>
+        <FormTestemunha editId={editId} onClose={fecharModal} onSuccess={onSuccess} />
+      </Modal>
     </div>
   );
 }

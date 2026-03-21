@@ -4,6 +4,8 @@ import { api } from "../../lib/api";
 import PageHeader from "../../components/PageHeader";
 import SearchBar from "../../components/SearchBar";
 import DataTable from "../../components/DataTable";
+import Modal from "../../components/ui/Modal";
+import FormProcesso from "./FormProcesso";
 
 interface Processo {
   id: string;
@@ -38,6 +40,8 @@ export default function ListaProcessos() {
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("");
   const [loading, setLoading] = useState(true);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const carregar = () => {
@@ -64,9 +68,24 @@ export default function ListaProcessos() {
     carregar();
   };
 
+  const abrirModal = (id?: string) => {
+    setEditId(id || null);
+    setModalOpen(true);
+  };
+
+  const fecharModal = () => {
+    setModalOpen(false);
+    setEditId(null);
+  };
+
+  const onSuccess = () => {
+    fecharModal();
+    carregar();
+  };
+
   return (
     <div>
-      <PageHeader title="Processos" createLink="/processos/novo" createLabel="Novo Processo" />
+      <PageHeader title="Processos" onCreate={() => abrirModal()} createLabel="Novo Processo" />
 
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <div className="flex-1">
@@ -117,6 +136,10 @@ export default function ListaProcessos() {
           onDelete={excluir}
         />
       )}
+
+      <Modal open={modalOpen} onClose={fecharModal} title={editId ? "Editar Processo" : "Novo Processo"} maxWidth="max-w-4xl">
+        <FormProcesso editId={editId} onClose={fecharModal} onSuccess={onSuccess} />
+      </Modal>
     </div>
   );
 }

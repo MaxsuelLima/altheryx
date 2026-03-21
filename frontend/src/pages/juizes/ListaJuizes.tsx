@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { api } from "../../lib/api";
 import PageHeader from "../../components/PageHeader";
 import SearchBar from "../../components/SearchBar";
 import DataTable from "../../components/DataTable";
+import Modal from "../../components/ui/Modal";
+import FormJuiz from "./FormJuiz";
 
 interface Juiz {
   id: string;
@@ -19,7 +20,8 @@ export default function ListaJuizes() {
   const [juizes, setJuizes] = useState<Juiz[]>([]);
   const [busca, setBusca] = useState("");
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
 
   const carregar = () => {
     setLoading(true);
@@ -40,9 +42,13 @@ export default function ListaJuizes() {
     carregar();
   };
 
+  const abrirModal = (id?: string) => { setEditId(id || null); setModalOpen(true); };
+  const fecharModal = () => { setModalOpen(false); setEditId(null); };
+  const onSuccess = () => { fecharModal(); carregar(); };
+
   return (
     <div>
-      <PageHeader title="Juízes" createLink="/juizes/novo" createLabel="Novo Juiz" />
+      <PageHeader title="Juízes" onCreate={() => abrirModal()} createLabel="Novo Juiz" />
       <SearchBar value={busca} onChange={setBusca} placeholder="Buscar por nome ou tribunal..." />
       {loading ? (
         <p className="text-theme-text-tertiary">Carregando...</p>
@@ -53,11 +59,7 @@ export default function ListaJuizes() {
             { key: "tribunal", label: "Tribunal" },
             { key: "vara", label: "Vara" },
             { key: "email", label: "E-mail" },
-            {
-              key: "_count",
-              label: "Processos",
-              render: (j) => j._count.processos,
-            },
+            { key: "_count", label: "Processos", render: (j) => j._count.processos },
             {
               key: "ativo",
               label: "Status",
@@ -69,10 +71,14 @@ export default function ListaJuizes() {
             },
           ]}
           data={juizes}
-          onEdit={(j) => navigate(`/juizes/${j.id}`)}
+          onEdit={(j) => abrirModal(j.id)}
           onDelete={excluir}
         />
       )}
+
+      <Modal open={modalOpen} onClose={fecharModal} title={editId ? "Editar Juiz" : "Novo Juiz"}>
+        <FormJuiz editId={editId} onClose={fecharModal} onSuccess={onSuccess} />
+      </Modal>
     </div>
   );
 }

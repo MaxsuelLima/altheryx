@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { api } from "../../lib/api";
 import PageHeader from "../../components/PageHeader";
 import SearchBar from "../../components/SearchBar";
 import DataTable from "../../components/DataTable";
+import Modal from "../../components/ui/Modal";
+import FormAdvogado from "./FormAdvogado";
 
 interface Advogado {
   id: string;
@@ -20,7 +21,8 @@ export default function ListaAdvogados() {
   const [advogados, setAdvogados] = useState<Advogado[]>([]);
   const [busca, setBusca] = useState("");
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
 
   const carregar = () => {
     setLoading(true);
@@ -41,9 +43,13 @@ export default function ListaAdvogados() {
     carregar();
   };
 
+  const abrirModal = (id?: string) => { setEditId(id || null); setModalOpen(true); };
+  const fecharModal = () => { setModalOpen(false); setEditId(null); };
+  const onSuccess = () => { fecharModal(); carregar(); };
+
   return (
     <div>
-      <PageHeader title="Advogados" createLink="/advogados/novo" createLabel="Novo Advogado" />
+      <PageHeader title="Advogados" onCreate={() => abrirModal()} createLabel="Novo Advogado" />
       <SearchBar value={busca} onChange={setBusca} placeholder="Buscar por nome ou OAB..." />
       {loading ? (
         <p className="text-theme-text-tertiary">Carregando...</p>
@@ -70,10 +76,14 @@ export default function ListaAdvogados() {
             },
           ]}
           data={advogados}
-          onEdit={(a) => navigate(`/advogados/${a.id}`)}
+          onEdit={(a) => abrirModal(a.id)}
           onDelete={excluir}
         />
       )}
+
+      <Modal open={modalOpen} onClose={fecharModal} title={editId ? "Editar Advogado" : "Novo Advogado"}>
+        <FormAdvogado editId={editId} onClose={fecharModal} onSuccess={onSuccess} />
+      </Modal>
     </div>
   );
 }

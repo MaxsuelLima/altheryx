@@ -6,6 +6,8 @@ import TabPartes from "./tabs/TabPartes";
 import TabMovimentacoes from "./tabs/TabMovimentacoes";
 import TabDocumentos from "./tabs/TabDocumentos";
 import TabFinanceiro from "./tabs/TabFinanceiro";
+import Modal from "../../components/ui/Modal";
+import FormProcesso from "./FormProcesso";
 
 interface Processo {
   id: string;
@@ -63,6 +65,7 @@ export default function DetalheProcesso() {
   const [processo, setProcesso] = useState<Processo | null>(null);
   const [activeTab, setActiveTab] = useState("capa");
   const [loading, setLoading] = useState(true);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   const carregar = () => {
     if (!id) return;
@@ -109,7 +112,7 @@ export default function DetalheProcesso() {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => navigate(`/processos/${id}/editar`)}
+            onClick={() => setEditModalOpen(true)}
             className="bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent-hover transition-colors text-sm font-medium"
           >
             Editar Capa
@@ -146,6 +149,14 @@ export default function DetalheProcesso() {
       {activeTab === "movimentacoes" && <TabMovimentacoes processoId={processo.id} movimentacoes={processo.movimentacoes} onUpdate={carregar} />}
       {activeTab === "documentos" && <TabDocumentos processoId={processo.id} />}
       {activeTab === "financeiro" && <TabFinanceiro processoId={processo.id} />}
+
+      <Modal open={editModalOpen} onClose={() => setEditModalOpen(false)} title="Editar Capa do Processo" maxWidth="max-w-4xl">
+        <FormProcesso
+          editId={processo.id}
+          onClose={() => setEditModalOpen(false)}
+          onSuccess={() => { setEditModalOpen(false); carregar(); }}
+        />
+      </Modal>
     </div>
   );
 }

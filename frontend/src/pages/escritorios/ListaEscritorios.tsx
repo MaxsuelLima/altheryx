@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { api } from "../../lib/api";
 import PageHeader from "../../components/PageHeader";
 import SearchBar from "../../components/SearchBar";
 import DataTable from "../../components/DataTable";
+import Modal from "../../components/ui/Modal";
+import FormEscritorio from "./FormEscritorio";
 
 interface Escritorio {
   id: string;
@@ -21,7 +22,8 @@ export default function ListaEscritorios() {
   const [escritorios, setEscritorios] = useState<Escritorio[]>([]);
   const [busca, setBusca] = useState("");
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
 
   const carregar = () => {
     setLoading(true);
@@ -42,9 +44,13 @@ export default function ListaEscritorios() {
     carregar();
   };
 
+  const abrirModal = (id?: string) => { setEditId(id || null); setModalOpen(true); };
+  const fecharModal = () => { setModalOpen(false); setEditId(null); };
+  const onSuccess = () => { fecharModal(); carregar(); };
+
   return (
     <div>
-      <PageHeader title="Escritórios" createLink="/escritorios/novo" createLabel="Novo Escritório" />
+      <PageHeader title="Escritórios" onCreate={() => abrirModal()} createLabel="Novo Escritório" />
       <SearchBar value={busca} onChange={setBusca} placeholder="Buscar por nome ou CNPJ..." />
       {loading ? (
         <p className="text-theme-text-tertiary">Carregando...</p>
@@ -71,10 +77,14 @@ export default function ListaEscritorios() {
             },
           ]}
           data={escritorios}
-          onEdit={(e) => navigate(`/escritorios/${e.id}`)}
+          onEdit={(e) => abrirModal(e.id)}
           onDelete={excluir}
         />
       )}
+
+      <Modal open={modalOpen} onClose={fecharModal} title={editId ? "Editar Escritório" : "Novo Escritório"}>
+        <FormEscritorio editId={editId} onClose={fecharModal} onSuccess={onSuccess} />
+      </Modal>
     </div>
   );
 }

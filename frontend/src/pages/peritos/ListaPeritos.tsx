@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { api } from "../../lib/api";
 import PageHeader from "../../components/PageHeader";
 import SearchBar from "../../components/SearchBar";
 import DataTable from "../../components/DataTable";
+import Modal from "../../components/ui/Modal";
+import FormPerito from "./FormPerito";
 
 interface Perito {
   id: string;
@@ -27,7 +28,8 @@ export default function ListaPeritos() {
   const [busca, setBusca] = useState("");
   const [filtroTipo, setFiltroTipo] = useState("");
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
 
   const carregar = () => {
     setLoading(true);
@@ -48,9 +50,13 @@ export default function ListaPeritos() {
     carregar();
   };
 
+  const abrirModal = (id?: string) => { setEditId(id || null); setModalOpen(true); };
+  const fecharModal = () => { setModalOpen(false); setEditId(null); };
+  const onSuccess = () => { fecharModal(); carregar(); };
+
   return (
     <div>
-      <PageHeader title="Peritos e Assistentes Técnicos" createLink="/peritos/novo" createLabel="Novo Perito" />
+      <PageHeader title="Peritos e Assistentes Técnicos" onCreate={() => abrirModal()} createLabel="Novo Perito" />
 
       <div className="flex gap-4 mb-4">
         <div className="flex-1">
@@ -81,10 +87,14 @@ export default function ListaPeritos() {
             { key: "_count", label: "Processos", render: (p: Perito) => p._count.processos },
           ]}
           data={peritos}
-          onEdit={(p) => navigate(`/peritos/${p.id}`)}
+          onEdit={(p) => abrirModal(p.id)}
           onDelete={excluir}
         />
       )}
+
+      <Modal open={modalOpen} onClose={fecharModal} title={editId ? "Editar Perito" : "Novo Perito / Assistente Técnico"}>
+        <FormPerito editId={editId} onClose={fecharModal} onSuccess={onSuccess} />
+      </Modal>
     </div>
   );
 }

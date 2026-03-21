@@ -83,6 +83,9 @@ export default {
         "fade-in": "fadeIn 0.2s ease-out",
         "slide-down": "slideDown 0.2s ease-out",
         "slide-up": "slideUp 0.15s ease-in",
+        "modal-overlay": "modalOverlay 0.2s ease-out forwards",
+        "modal-in": "modalIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        "modal-out": "modalOut 0.2s ease-in forwards",
       },
       keyframes: {
         fadeIn: {
@@ -96,6 +99,18 @@ export default {
         slideUp: {
           "0%": { opacity: "1", transform: "translateY(0)" },
           "100%": { opacity: "0", transform: "translateY(-4px)" },
+        },
+        modalOverlay: {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        modalIn: {
+          "0%": { opacity: "0", transform: "translateY(24px) scale(0.96)" },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
+        modalOut: {
+          "0%": { opacity: "1", transform: "translateY(0) scale(1)" },
+          "100%": { opacity: "0", transform: "translateY(24px) scale(0.96)" },
         },
       },
     },

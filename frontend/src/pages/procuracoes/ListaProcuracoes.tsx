@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { api } from "../../lib/api";
+import { Plus, Pencil, Trash2 } from "lucide-react";
+import Modal from "../../components/ui/Modal";
+import FormProcuracao from "./FormProcuracao";
 
 interface Procuracao {
   id: string;
@@ -32,12 +34,13 @@ const statusColors: Record<string, string> = {
 };
 
 export default function ListaProcuracoes() {
-  const navigate = useNavigate();
   const [procuracoes, setProcuracoes] = useState<Procuracao[]>([]);
   const [alertas, setAlertas] = useState<Alerta[]>([]);
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
 
   const carregar = () => {
     const params = new URLSearchParams();
@@ -65,6 +68,10 @@ export default function ListaProcuracoes() {
     carregar();
   };
 
+  const abrirModal = (id?: string) => { setEditId(id || null); setModalOpen(true); };
+  const fecharModal = () => { setModalOpen(false); setEditId(null); };
+  const onSuccess = () => { fecharModal(); carregar(); };
+
   if (loading) {
     return <div className="flex items-center justify-center h-64"><p className="text-theme-text-tertiary text-lg">Carregando...</p></div>;
   }
@@ -74,21 +81,22 @@ export default function ListaProcuracoes() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-theme-text-primary">Procurações</h2>
         <button
-          onClick={() => navigate("/procuracoes/novo")}
-          className="bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent-hover transition-colors text-sm font-medium"
+          onClick={() => abrirModal()}
+          className="inline-flex items-center gap-2 bg-accent text-white px-4 py-2.5 rounded-lg hover:bg-accent-hover transition-colors text-sm font-medium shadow-sm"
         >
+          <Plus size={16} />
           Nova Procuração
         </button>
       </div>
 
       {alertas.length > 0 && (
-        <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
-          <h3 className="text-sm font-semibold text-amber-800 mb-2">
+        <div className="mb-6 bg-warning-light border border-warning rounded-lg p-4">
+          <h3 className="text-sm font-semibold text-theme-text-primary mb-2">
             Alertas de Renovação ({alertas.length})
           </h3>
           <div className="space-y-2">
             {alertas.map((a) => (
-              <div key={a.id} className="flex items-center justify-between bg-theme-input-bg rounded-lg px-4 py-2 border border-amber-100">
+              <div key={a.id} className="flex items-center justify-between bg-theme-card-bg rounded-lg px-4 py-2 border border-theme-card-border">
                 <div>
                   <span className="text-sm font-medium text-theme-text-primary">
                     {a.outorgante} → {a.outorgado}
@@ -99,7 +107,7 @@ export default function ListaProcuracoes() {
                 </div>
                 <div className="flex items-center gap-3">
                   {a.vencida ? (
-                    <span className="px-2 py-1 rounded text-xs font-medium bg-danger-light0 text-white">
+                    <span className="px-2 py-1 rounded text-xs font-medium bg-danger text-white">
                       Vencida
                     </span>
                   ) : (
@@ -110,7 +118,7 @@ export default function ListaProcuracoes() {
                     </span>
                   )}
                   <button
-                    onClick={() => navigate(`/procuracoes/${a.id}`)}
+                    onClick={() => abrirModal(a.id)}
                     className="text-xs text-accent hover:text-accent-hover font-medium"
                   >
                     Editar
@@ -128,7 +136,7 @@ export default function ListaProcuracoes() {
           placeholder="Buscar por outorgante, outorgado ou poderes..."
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
-          className="flex-1 border border-theme-border-primary rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
+          className="flex-1 border border-theme-border-primary rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent bg-theme-input-bg text-theme-text-primary"
         />
         <select
           value={filtroStatus}
@@ -147,9 +155,9 @@ export default function ListaProcuracoes() {
           <p className="text-theme-text-tertiary text-lg">Nenhuma procuração encontrada</p>
         </div>
       ) : (
-        <div className="bg-theme-card-bg rounded-lg shadow overflow-hidden">
+        <div className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card overflow-hidden">
           <table className="w-full">
-            <thead className="bg-theme-bg-tertiary">
+            <thead className="bg-theme-table-header">
               <tr>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-theme-text-secondary uppercase">Outorgante</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-theme-text-secondary uppercase">Outorgado</th>
@@ -169,7 +177,7 @@ export default function ListaProcuracoes() {
                   new Date(p.dataValidade).getTime() - hoje.getTime() < 30 * 24 * 60 * 60 * 1000;
 
                 return (
-                  <tr key={p.id} className="hover:bg-theme-bg-tertiary">
+                  <tr key={p.id} className="hover:bg-theme-table-hover transition-colors">
                     <td className="px-4 py-3 text-sm text-theme-text-primary">{p.outorgante}</td>
                     <td className="px-4 py-3 text-sm text-theme-text-primary">{p.outorgado}</td>
                     <td className="px-4 py-3 text-sm text-theme-text-secondary">
@@ -185,7 +193,7 @@ export default function ListaProcuracoes() {
                           : "Indeterminada"}
                       </span>
                       {venceEm30 && (
-                        <span className="ml-1 text-xs text-amber-500">!</span>
+                        <span className="ml-1 text-xs text-warning">!</span>
                       )}
                     </td>
                     <td className="px-4 py-3">
@@ -194,18 +202,20 @@ export default function ListaProcuracoes() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      <div className="flex gap-2 justify-end">
+                      <div className="flex gap-1 justify-end">
                         <button
-                          onClick={() => navigate(`/procuracoes/${p.id}`)}
-                          className="text-xs bg-accent-light text-accent-hover px-3 py-1.5 rounded-lg hover:bg-accent-light transition-colors"
+                          onClick={() => abrirModal(p.id)}
+                          className="p-1.5 rounded-lg text-theme-text-tertiary hover:text-accent hover:bg-accent-subtle transition-colors"
+                          title="Editar"
                         >
-                          Editar
+                          <Pencil size={15} />
                         </button>
                         <button
                           onClick={() => excluir(p.id)}
-                          className="text-xs bg-danger-light text-danger px-3 py-1.5 rounded-lg hover:bg-danger-light transition-colors"
+                          className="p-1.5 rounded-lg text-theme-text-tertiary hover:text-danger hover:bg-danger-light transition-colors"
+                          title="Excluir"
                         >
-                          Excluir
+                          <Trash2 size={15} />
                         </button>
                       </div>
                     </td>
@@ -216,6 +226,10 @@ export default function ListaProcuracoes() {
           </table>
         </div>
       )}
+
+      <Modal open={modalOpen} onClose={fecharModal} title={editId ? "Editar Procuração" : "Nova Procuração"}>
+        <FormProcuracao editId={editId} onClose={fecharModal} onSuccess={onSuccess} />
+      </Modal>
     </div>
   );
 }

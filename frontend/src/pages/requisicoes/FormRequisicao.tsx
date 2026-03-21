@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../../lib/api";
+import FormField from "../../components/FormField";
+import CustomSelect from "../../components/ui/CustomSelect";
 
 const tiposPorArea: Record<string, { value: string; label: string }[]> = {
   CONTRATOS: [
@@ -14,26 +16,37 @@ const tiposPorArea: Record<string, { value: string; label: string }[]> = {
   ],
 };
 
-export default function FormRequisicao() {
-  const { id } = useParams();
+const initialState = {
+  solicitante: "",
+  departamento: "",
+  area: "CONTRATOS",
+  tipo: "ELABORACAO_CONTRATO",
+  prioridade: "MEDIA",
+  status: "ABERTA",
+  titulo: "",
+  descricao: "",
+  partesEnvolvidas: "",
+  valorEnvolvido: "",
+  prazoDesejado: "",
+  responsavel: "",
+  resposta: "",
+};
+
+interface FormRequisicaoProps {
+  editId?: string | null;
+  onClose?: () => void;
+  onSuccess?: () => void;
+}
+
+export default function FormRequisicao({ editId, onClose, onSuccess }: FormRequisicaoProps = {}) {
+  const params = useParams();
   const navigate = useNavigate();
+  const id = editId ?? params.id;
+  const isModal = !!onClose;
   const editando = !!id;
 
-  const [form, setForm] = useState({
-    solicitante: "",
-    departamento: "",
-    area: "CONTRATOS",
-    tipo: "ELABORACAO_CONTRATO",
-    prioridade: "MEDIA",
-    status: "ABERTA",
-    titulo: "",
-    descricao: "",
-    partesEnvolvidas: "",
-    valorEnvolvido: "",
-    prazoDesejado: "",
-    responsavel: "",
-    resposta: "",
-  });
+  const [form, setForm] = useState(initialState);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -55,20 +68,23 @@ export default function FormRequisicao() {
           resposta: r.resposta || "",
         });
       });
+    } else {
+      setForm(initialState);
     }
   }, [id]);
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
   const handleAreaChange = (area: string) => {
     const tipos = tiposPorArea[area];
-    setForm({
-      ...form,
-      area,
-      tipo: tipos?.[0]?.value || "",
-    });
+    setForm((prev) => ({ ...prev, area, tipo: tipos?.[0]?.value || "" }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     const payload = {
       ...form,
       partesEnvolvidas: form.partesEnvolvidas || null,
@@ -78,202 +94,130 @@ export default function FormRequisicao() {
       resposta: form.resposta || null,
     };
 
-    if (editando) {
-      await api.put(`/requisicoes/${id}`, payload);
-    } else {
-      await api.post("/requisicoes", payload);
+    try {
+      if (editando) {
+        await api.put(`/requisicoes/${id}`, payload);
+      } else {
+        await api.post("/requisicoes", payload);
+      }
+      if (isModal) onSuccess?.();
+      else navigate("/requisicoes");
+    } finally {
+      setLoading(false);
     }
-    navigate("/requisicoes");
+  };
+
+  const handleCancel = () => {
+    if (isModal) onClose?.();
+    else navigate("/requisicoes");
   };
 
   const tiposDisponiveis = tiposPorArea[form.area] || [];
+
+  const content = (
+    <form onSubmit={handleSubmit}>
+      <div className="bg-accent-subtle rounded-lg p-4 mb-6">
+        <h3 className="text-sm font-semibold text-theme-text-primary mb-3">Dados do Solicitante</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField label="Nome do Solicitante" name="solicitante" value={form.solicitante} onChange={handleChange} required />
+          <FormField label="Departamento" name="departamento" value={form.departamento} onChange={handleChange} required placeholder="Ex: Comercial, RH, Financeiro" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <CustomSelect
+          label="Área"
+          name="area"
+          value={form.area}
+          onChange={handleAreaChange}
+          options={[
+            { value: "CONTRATOS", label: "Contratos" },
+            { value: "CONSULTIVO", label: "Consultivo" },
+          ]}
+          required
+        />
+        <CustomSelect
+          label="Tipo de Serviço"
+          name="tipo"
+          value={form.tipo}
+          onChange={(val) => setForm((prev) => ({ ...prev, tipo: val }))}
+          options={tiposDisponiveis}
+          required
+        />
+        <CustomSelect
+          label="Prioridade"
+          name="prioridade"
+          value={form.prioridade}
+          onChange={(val) => setForm((prev) => ({ ...prev, prioridade: val }))}
+          options={[
+            { value: "BAIXA", label: "Baixa" },
+            { value: "MEDIA", label: "Média" },
+            { value: "ALTA", label: "Alta" },
+            { value: "URGENTE", label: "Urgente" },
+          ]}
+        />
+      </div>
+
+      {editando && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <CustomSelect
+            label="Status"
+            name="status"
+            value={form.status}
+            onChange={(val) => setForm((prev) => ({ ...prev, status: val }))}
+            options={[
+              { value: "ABERTA", label: "Aberta" },
+              { value: "EM_ANALISE", label: "Em Análise" },
+              { value: "EM_ANDAMENTO", label: "Em Andamento" },
+              { value: "CONCLUIDA", label: "Concluída" },
+              { value: "CANCELADA", label: "Cancelada" },
+            ]}
+          />
+          <FormField label="Responsável" name="responsavel" value={form.responsavel} onChange={handleChange} placeholder="Nome do advogado responsável" />
+        </div>
+      )}
+
+      <div className="mb-4">
+        <FormField label="Título da Requisição" name="titulo" value={form.titulo} onChange={handleChange} required />
+      </div>
+
+      <div className="mb-4">
+        <FormField label="Descrição Detalhada" name="descricao" value={form.descricao} onChange={handleChange} textarea required placeholder="Descreva com detalhes o serviço solicitado..." />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <FormField label="Partes Envolvidas" name="partesEnvolvidas" value={form.partesEnvolvidas} onChange={handleChange} placeholder="Nomes das partes" />
+        <FormField label="Valor Envolvido (R$)" name="valorEnvolvido" value={form.valorEnvolvido} onChange={handleChange} type="number" />
+        <FormField label="Prazo Desejado" name="prazoDesejado" value={form.prazoDesejado} onChange={handleChange} type="date" />
+      </div>
+
+      {editando && (
+        <div className="mb-4">
+          <FormField label="Resposta / Parecer do Jurídico" name="resposta" value={form.resposta} onChange={handleChange} textarea placeholder="Resposta ou parecer do departamento jurídico..." />
+        </div>
+      )}
+
+      <div className="flex gap-3 mt-6">
+        <button type="submit" disabled={loading} className="bg-accent text-white px-6 py-2 rounded-lg hover:bg-accent-hover disabled:opacity-50 transition-colors text-sm font-medium">
+          {loading ? "Salvando..." : editando ? "Atualizar" : "Enviar Requisição"}
+        </button>
+        <button type="button" onClick={handleCancel} className="bg-theme-bg-tertiary text-theme-text-secondary px-6 py-2 rounded-lg hover:bg-theme-bg-hover transition-colors text-sm font-medium">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  );
+
+  if (isModal) return content;
 
   return (
     <div>
       <h2 className="text-2xl font-bold text-theme-text-primary mb-6">
         {editando ? "Editar Requisição" : "Nova Requisição ao Jurídico"}
       </h2>
-
-      <form onSubmit={handleSubmit} className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-6 max-w-4xl">
-        <div className="bg-indigo-50 rounded-lg p-4 mb-6">
-          <h3 className="text-sm font-semibold text-indigo-800 mb-1">Dados do Solicitante</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
-            <div>
-              <label className="block text-sm font-medium text-theme-text-secondary mb-1">Nome do Solicitante *</label>
-              <input
-                type="text"
-                value={form.solicitante}
-                onChange={(e) => setForm({ ...form, solicitante: e.target.value })}
-                className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-theme-text-secondary mb-1">Departamento *</label>
-              <input
-                type="text"
-                value={form.departamento}
-                onChange={(e) => setForm({ ...form, departamento: e.target.value })}
-                placeholder="Ex: Comercial, RH, Financeiro"
-                className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
-                required
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium text-theme-text-secondary mb-1">Área *</label>
-            <select
-              value={form.area}
-              onChange={(e) => handleAreaChange(e.target.value)}
-              className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
-            >
-              <option value="CONTRATOS">Contratos</option>
-              <option value="CONSULTIVO">Consultivo</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-theme-text-secondary mb-1">Tipo de Serviço *</label>
-            <select
-              value={form.tipo}
-              onChange={(e) => setForm({ ...form, tipo: e.target.value })}
-              className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
-            >
-              {tiposDisponiveis.map((t) => (
-                <option key={t.value} value={t.value}>{t.label}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-theme-text-secondary mb-1">Prioridade</label>
-            <select
-              value={form.prioridade}
-              onChange={(e) => setForm({ ...form, prioridade: e.target.value })}
-              className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
-            >
-              <option value="BAIXA">Baixa</option>
-              <option value="MEDIA">Média</option>
-              <option value="ALTA">Alta</option>
-              <option value="URGENTE">Urgente</option>
-            </select>
-          </div>
-        </div>
-
-        {editando && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-theme-text-secondary mb-1">Status</label>
-              <select
-                value={form.status}
-                onChange={(e) => setForm({ ...form, status: e.target.value })}
-                className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
-              >
-                <option value="ABERTA">Aberta</option>
-                <option value="EM_ANALISE">Em Análise</option>
-                <option value="EM_ANDAMENTO">Em Andamento</option>
-                <option value="CONCLUIDA">Concluída</option>
-                <option value="CANCELADA">Cancelada</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-theme-text-secondary mb-1">Responsável</label>
-              <input
-                type="text"
-                value={form.responsavel}
-                onChange={(e) => setForm({ ...form, responsavel: e.target.value })}
-                placeholder="Nome do advogado responsável"
-                className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
-              />
-            </div>
-          </div>
-        )}
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-theme-text-secondary mb-1">Título da Requisição *</label>
-          <input
-            type="text"
-            value={form.titulo}
-            onChange={(e) => setForm({ ...form, titulo: e.target.value })}
-            className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
-            required
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-theme-text-secondary mb-1">Descrição Detalhada *</label>
-          <textarea
-            value={form.descricao}
-            onChange={(e) => setForm({ ...form, descricao: e.target.value })}
-            rows={4}
-            placeholder="Descreva com detalhes o serviço solicitado..."
-            className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
-            required
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium text-theme-text-secondary mb-1">Partes Envolvidas</label>
-            <input
-              type="text"
-              value={form.partesEnvolvidas}
-              onChange={(e) => setForm({ ...form, partesEnvolvidas: e.target.value })}
-              placeholder="Nomes das partes"
-              className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-theme-text-secondary mb-1">Valor Envolvido (R$)</label>
-            <input
-              type="number"
-              step="0.01"
-              value={form.valorEnvolvido}
-              onChange={(e) => setForm({ ...form, valorEnvolvido: e.target.value })}
-              className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-theme-text-secondary mb-1">Prazo Desejado</label>
-            <input
-              type="date"
-              value={form.prazoDesejado}
-              onChange={(e) => setForm({ ...form, prazoDesejado: e.target.value })}
-              className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
-            />
-          </div>
-        </div>
-
-        {editando && (
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-theme-text-secondary mb-1">Resposta / Parecer do Jurídico</label>
-            <textarea
-              value={form.resposta}
-              onChange={(e) => setForm({ ...form, resposta: e.target.value })}
-              rows={4}
-              placeholder="Resposta ou parecer do departamento jurídico..."
-              className="w-full border border-theme-border-primary rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
-            />
-          </div>
-        )}
-
-        <div className="flex gap-3 mt-6">
-          <button
-            type="submit"
-            className="bg-accent text-white px-6 py-2 rounded-lg hover:bg-accent-hover transition-colors text-sm font-medium"
-          >
-            {editando ? "Atualizar" : "Enviar Requisição"}
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate("/requisicoes")}
-            className="bg-theme-bg-tertiary text-theme-text-secondary px-6 py-2 rounded-lg hover:bg-theme-bg-hover transition-colors text-sm font-medium"
-          >
-            Cancelar
-          </button>
-        </div>
-      </form>
+      <div className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-6 max-w-4xl">
+        {content}
+      </div>
     </div>
   );
 }

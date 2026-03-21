@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { api } from "../../lib/api";
+import { Plus, Pencil, Trash2 } from "lucide-react";
+import Modal from "../../components/ui/Modal";
+import FormRequisicao from "./FormRequisicao";
 
 interface Requisicao {
   id: string;
@@ -69,13 +71,14 @@ const statusColors: Record<string, string> = {
 };
 
 export default function ListaRequisicoes() {
-  const navigate = useNavigate();
   const [requisicoes, setRequisicoes] = useState<Requisicao[]>([]);
   const [dashboard, setDashboard] = useState<Dashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [busca, setBusca] = useState("");
   const [filtroStatus, setFiltroStatus] = useState("");
   const [filtroArea, setFiltroArea] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editId, setEditId] = useState<string | null>(null);
 
   const carregar = () => {
     const params = new URLSearchParams();
@@ -104,6 +107,10 @@ export default function ListaRequisicoes() {
     carregar();
   };
 
+  const abrirModal = (id?: string) => { setEditId(id || null); setModalOpen(true); };
+  const fecharModal = () => { setModalOpen(false); setEditId(null); };
+  const onSuccess = () => { fecharModal(); carregar(); };
+
   if (loading) {
     return <div className="flex items-center justify-center h-64"><p className="text-theme-text-tertiary text-lg">Carregando...</p></div>;
   }
@@ -113,9 +120,10 @@ export default function ListaRequisicoes() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-theme-text-primary">Requisições ao Jurídico</h2>
         <button
-          onClick={() => navigate("/requisicoes/novo")}
-          className="bg-accent text-white px-4 py-2 rounded-lg hover:bg-accent-hover transition-colors text-sm font-medium"
+          onClick={() => abrirModal()}
+          className="inline-flex items-center gap-2 bg-accent text-white px-4 py-2.5 rounded-lg hover:bg-accent-hover transition-colors text-sm font-medium shadow-sm"
         >
+          <Plus size={16} />
           Nova Requisição
         </button>
       </div>
@@ -123,7 +131,7 @@ export default function ListaRequisicoes() {
       {dashboard && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
           <div className="bg-theme-card-bg rounded-xl border border-theme-card-border shadow-card p-4 text-center">
-            <p className="text-2xl font-bold text-accent-hover">{dashboard.total}</p>
+            <p className="text-2xl font-bold text-accent">{dashboard.total}</p>
             <p className="text-xs text-theme-text-tertiary">Total</p>
           </div>
           {dashboard.porStatus
@@ -143,7 +151,7 @@ export default function ListaRequisicoes() {
           placeholder="Buscar por título, solicitante, departamento..."
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
-          className="flex-1 min-w-[200px] border border-theme-border-primary rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent"
+          className="flex-1 min-w-[200px] border border-theme-border-primary rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-accent-light focus:border-accent bg-theme-input-bg text-theme-text-primary"
         />
         <select
           value={filtroArea}
@@ -185,7 +193,7 @@ export default function ListaRequisicoes() {
                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${prioridadeColors[req.prioridade] || ""}`}>
                       {prioridadeLabels[req.prioridade] || req.prioridade}
                     </span>
-                    <span className="bg-indigo-50 text-accent px-2 py-0.5 rounded text-xs font-medium">
+                    <span className="bg-accent-subtle text-accent px-2 py-0.5 rounded text-xs font-medium">
                       {areaLabels[req.area] || req.area}
                     </span>
                     <span className="bg-theme-bg-tertiary text-theme-text-secondary px-2 py-0.5 rounded text-xs">
@@ -204,18 +212,20 @@ export default function ListaRequisicoes() {
                     <span>Criada em: {new Date(req.criadoEm).toLocaleDateString("pt-BR")}</span>
                   </div>
                 </div>
-                <div className="flex gap-2 ml-4">
+                <div className="flex gap-1 ml-4">
                   <button
-                    onClick={() => navigate(`/requisicoes/${req.id}`)}
-                    className="text-xs bg-accent-light text-accent-hover px-3 py-1.5 rounded-lg hover:bg-accent-light transition-colors"
+                    onClick={() => abrirModal(req.id)}
+                    className="p-1.5 rounded-lg text-theme-text-tertiary hover:text-accent hover:bg-accent-subtle transition-colors"
+                    title="Editar"
                   >
-                    Editar
+                    <Pencil size={15} />
                   </button>
                   <button
                     onClick={() => excluir(req.id)}
-                    className="text-xs bg-danger-light text-danger px-3 py-1.5 rounded-lg hover:bg-danger-light transition-colors"
+                    className="p-1.5 rounded-lg text-theme-text-tertiary hover:text-danger hover:bg-danger-light transition-colors"
+                    title="Excluir"
                   >
-                    Excluir
+                    <Trash2 size={15} />
                   </button>
                 </div>
               </div>
@@ -223,6 +233,10 @@ export default function ListaRequisicoes() {
           ))}
         </div>
       )}
+
+      <Modal open={modalOpen} onClose={fecharModal} title={editId ? "Editar Requisição" : "Nova Requisição ao Jurídico"} maxWidth="max-w-4xl">
+        <FormRequisicao editId={editId} onClose={fecharModal} onSuccess={onSuccess} />
+      </Modal>
     </div>
   );
 }
