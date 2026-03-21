@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
-import { registrarAuditoria, getUsuario, getWorkspaceId } from "../lib/auditService";
+import { registrarAuditoria, getUsuario, getWorkspaceId, getIp } from "../lib/auditService";
 
 const prepostoSchema = z.object({
   nome: z.string().min(2),
@@ -69,6 +69,7 @@ export async function criarPreposto(req: Request, res: Response) {
       acao: "CRIACAO",
       dadosNovos: preposto,
       usuario: getUsuario(req),
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -98,6 +99,7 @@ export async function atualizarPreposto(req: IdParam, res: Response) {
       dadosAnteriores: anterior,
       dadosNovos: preposto,
       usuario: getUsuario(req),
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -126,6 +128,7 @@ export async function excluirPreposto(req: IdParam, res: Response) {
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario,
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 

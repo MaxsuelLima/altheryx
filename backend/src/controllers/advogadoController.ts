@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
-import { registrarAuditoria, getUsuario, getWorkspaceId } from "../lib/auditService";
+import { registrarAuditoria, getUsuario, getWorkspaceId, getIp } from "../lib/auditService";
 
 const advogadoSchema = z.object({
   nome: z.string().min(2),
@@ -71,6 +71,7 @@ export async function criarAdvogado(req: Request, res: Response) {
       acao: "CRIACAO",
       dadosNovos: advogado,
       usuario: getUsuario(req),
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -101,6 +102,7 @@ export async function atualizarAdvogado(req: IdParam, res: Response) {
       dadosAnteriores: anterior,
       dadosNovos: advogado,
       usuario: getUsuario(req),
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -129,6 +131,7 @@ export async function excluirAdvogado(req: IdParam, res: Response) {
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario,
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 

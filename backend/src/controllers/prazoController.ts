@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
 import { TipoPrazo, StatusPrazo } from "@prisma/client";
-import { registrarAuditoria, getUsuario } from "../lib/auditService";
+import { registrarAuditoria, getUsuario, getIp } from "../lib/auditService";
 
 type IdParam = Request<{ id: string }>;
 
@@ -102,6 +102,7 @@ export async function criarPrazo(req: Request, res: Response) {
       acao: "CRIACAO",
       dadosNovos: prazo,
       usuario: getUsuario(req),
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -148,6 +149,7 @@ export async function atualizarPrazo(req: IdParam, res: Response) {
       dadosAnteriores: anterior,
       dadosNovos: prazo,
       usuario: getUsuario(req),
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -176,6 +178,7 @@ export async function excluirPrazo(req: IdParam, res: Response) {
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario,
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -202,6 +205,7 @@ export async function marcarStatus(req: IdParam, res: Response) {
       dadosAnteriores: { status: anterior?.status },
       dadosNovos: { status: prazo.status },
       usuario: getUsuario(req),
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 

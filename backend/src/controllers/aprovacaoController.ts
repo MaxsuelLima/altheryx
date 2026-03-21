@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { Prognostico, FormaPagamento } from "@prisma/client";
-import { registrarAuditoria, getUsuario } from "../lib/auditService";
+import { registrarAuditoria, getUsuario, getIp } from "../lib/auditService";
 
 export async function listarAprovacoes(req: Request, res: Response) {
   try {
@@ -63,6 +63,7 @@ export async function aprovarAlteracao(req: Request<{ id: string }>, res: Respon
         dadosAnteriores: anterior,
         dadosNovos: atualizado,
         usuario,
+        ip: getIp(req),
         workspaceId: req.workspaceId,
       });
     } else if (aprovacao.entidade === "Financeiro") {
@@ -82,6 +83,7 @@ export async function aprovarAlteracao(req: Request<{ id: string }>, res: Respon
         dadosAnteriores: anterior,
         dadosNovos: atualizado,
         usuario,
+        ip: getIp(req),
         workspaceId: req.workspaceId,
       });
     }

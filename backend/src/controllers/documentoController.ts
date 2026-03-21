@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { OrigemDocumento, FlagDecisao, ClassificacaoAnexo } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { uploadDir } from "../lib/upload";
-import { registrarAuditoria, getUsuario } from "../lib/auditService";
+import { registrarAuditoria, getUsuario, getIp } from "../lib/auditService";
 import path from "path";
 import fs from "fs";
 
@@ -66,6 +66,7 @@ export async function uploadDocumento(req: Request<{ id: string }>, res: Respons
       acao: "CRIACAO",
       dadosNovos: { id: documento.id, nomeOriginal: documento.nomeOriginal, processoId: req.params.id },
       usuario: getUsuario(req),
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -150,6 +151,7 @@ export async function atualizarDocumento(req: Request<{ id: string; docId: strin
       dadosAnteriores: anterior,
       dadosNovos: documento,
       usuario: getUsuario(req),
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -182,6 +184,7 @@ export async function excluirDocumento(req: Request<{ id: string; docId: string 
       acao: "EXCLUSAO",
       dadosAnteriores: { id: documento.id, nomeOriginal: documento.nomeOriginal },
       usuario,
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 

@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
 import { StatusProcuracao, TipoProcuracao } from "@prisma/client";
-import { registrarAuditoria, getUsuario, getWorkspaceId } from "../lib/auditService";
+import { registrarAuditoria, getUsuario, getWorkspaceId, getIp } from "../lib/auditService";
 
 type IdParam = Request<{ id: string }>;
 
@@ -84,6 +84,7 @@ export async function criarProcuracao(req: Request, res: Response) {
       acao: "CRIACAO",
       dadosNovos: procuracao,
       usuario: getUsuario(req),
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -118,6 +119,7 @@ export async function atualizarProcuracao(req: IdParam, res: Response) {
       dadosAnteriores: anterior,
       dadosNovos: procuracao,
       usuario: getUsuario(req),
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -146,6 +148,7 @@ export async function excluirProcuracao(req: IdParam, res: Response) {
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario,
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 

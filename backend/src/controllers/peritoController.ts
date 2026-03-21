@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
 import { TipoPerito } from "@prisma/client";
-import { registrarAuditoria, getUsuario, getWorkspaceId } from "../lib/auditService";
+import { registrarAuditoria, getUsuario, getWorkspaceId, getIp } from "../lib/auditService";
 
 const peritoSchema = z.object({
   nome: z.string().min(2),
@@ -79,6 +79,7 @@ export async function criarPerito(req: Request, res: Response) {
       acao: "CRIACAO",
       dadosNovos: perito,
       usuario: getUsuario(req),
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -111,6 +112,7 @@ export async function atualizarPerito(req: IdParam, res: Response) {
       dadosAnteriores: anterior,
       dadosNovos: perito,
       usuario: getUsuario(req),
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -139,6 +141,7 @@ export async function excluirPerito(req: IdParam, res: Response) {
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario,
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 

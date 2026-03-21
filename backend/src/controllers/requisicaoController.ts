@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
 import { AreaRequisicao, TipoRequisicao, PrioridadeRequisicao, StatusRequisicao } from "@prisma/client";
-import { registrarAuditoria, getUsuario, getWorkspaceId } from "../lib/auditService";
+import { registrarAuditoria, getUsuario, getWorkspaceId, getIp } from "../lib/auditService";
 
 type IdParam = Request<{ id: string }>;
 
@@ -96,6 +96,7 @@ export async function criarRequisicao(req: Request, res: Response) {
       acao: "CRIACAO",
       dadosNovos: requisicao,
       usuario: getUsuario(req),
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -140,6 +141,7 @@ export async function atualizarRequisicao(req: IdParam, res: Response) {
       dadosAnteriores: anterior,
       dadosNovos: requisicao,
       usuario: getUsuario(req),
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -168,6 +170,7 @@ export async function excluirRequisicao(req: IdParam, res: Response) {
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario,
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 

@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { Prognostico, FormaPagamento, StatusParcela } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
-import { registrarAuditoria, getUsuario, criarAprovacao, ENTIDADES_SENSIVEIS } from "../lib/auditService";
+import { registrarAuditoria, getUsuario, criarAprovacao, ENTIDADES_SENSIVEIS, getIp } from "../lib/auditService";
 
 type IdParam = Request<{ id: string }>;
 
@@ -103,6 +103,7 @@ export async function atualizarFinanceiro(req: IdParam, res: Response) {
       dadosAnteriores: anterior,
       dadosNovos: financeiro,
       usuario,
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -142,6 +143,7 @@ export async function adicionarParcela(req: IdParam, res: Response) {
       acao: "CRIACAO",
       dadosNovos: parcela,
       usuario: getUsuario(req),
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -177,6 +179,7 @@ export async function atualizarParcela(
       dadosAnteriores: anterior,
       dadosNovos: parcela,
       usuario: getUsuario(req),
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -208,6 +211,7 @@ export async function excluirParcela(
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario,
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 

@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
 import { FaseProcessual } from "@prisma/client";
-import { registrarAuditoria, getUsuario, criarAprovacao, ENTIDADES_SENSIVEIS } from "../lib/auditService";
+import { registrarAuditoria, getUsuario, criarAprovacao, ENTIDADES_SENSIVEIS, getIp } from "../lib/auditService";
 import { detectarFase, calcularCorrecaoMonetaria, INDICES_DISPONIVEIS } from "../lib/faseProcessual";
 
 type IdParam = Request<{ id: string }>;
@@ -96,6 +96,7 @@ export async function criarProcesso(req: Request, res: Response) {
       acao: "CRIACAO",
       dadosNovos: processo,
       usuario: getUsuario(req),
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -147,6 +148,7 @@ export async function atualizarProcesso(req: IdParam, res: Response) {
       dadosAnteriores: anterior,
       dadosNovos: processo,
       usuario,
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -175,6 +177,7 @@ export async function excluirProcesso(req: IdParam, res: Response) {
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario,
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -215,6 +218,7 @@ export async function adicionarMovimentacao(req: IdParam, res: Response) {
       acao: "CRIACAO",
       dadosNovos: { ...movimentacao, faseDetectada },
       usuario: getUsuario(req),
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -243,6 +247,7 @@ export async function excluirMovimentacao(req: Request<{ id: string; movId: stri
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario,
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 

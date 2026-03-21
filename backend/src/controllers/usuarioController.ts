@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { hashPassword } from "../lib/auth";
 import { z } from "zod";
-import { registrarAuditoria } from "../lib/auditService";
+import { registrarAuditoria, getIp } from "../lib/auditService";
 
 const usuarioSchema = z.object({
   nome: z.string().min(2),
@@ -66,6 +66,7 @@ export async function criarUsuario(req: Request, res: Response) {
       acao: "CRIACAO",
       dadosNovos: usuario,
       usuario: req.user!.userName,
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -110,6 +111,7 @@ export async function atualizarUsuario(req: Request, res: Response) {
       dadosAnteriores: anterior,
       dadosNovos: usuario,
       usuario: req.user!.userName,
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -146,6 +148,7 @@ export async function excluirUsuario(req: Request, res: Response) {
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario: req.user!.userName,
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 

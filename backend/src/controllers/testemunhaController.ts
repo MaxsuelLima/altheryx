@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
-import { registrarAuditoria, getUsuario, getWorkspaceId } from "../lib/auditService";
+import { registrarAuditoria, getUsuario, getWorkspaceId, getIp } from "../lib/auditService";
 
 const testemunhaSchema = z.object({
   nome: z.string().min(2),
@@ -65,6 +65,7 @@ export async function criarTestemunha(req: Request, res: Response) {
       acao: "CRIACAO",
       dadosNovos: testemunha,
       usuario: getUsuario(req),
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -94,6 +95,7 @@ export async function atualizarTestemunha(req: IdParam, res: Response) {
       dadosAnteriores: anterior,
       dadosNovos: testemunha,
       usuario: getUsuario(req),
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
@@ -122,6 +124,7 @@ export async function excluirTestemunha(req: IdParam, res: Response) {
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario,
+      ip: getIp(req),
       workspaceId: req.workspaceId,
     });
 
