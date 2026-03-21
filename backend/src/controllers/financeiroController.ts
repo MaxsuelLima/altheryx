@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { Prognostico, FormaPagamento, StatusParcela } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
-import { registrarAuditoria, getUsuario, criarAprovacao, ENTIDADES_SENSIVEIS, getIp } from "../lib/auditService";
+import { criarAprovacao, ENTIDADES_SENSIVEIS } from "../lib/auditService";
 
 type IdParam = Request<{ id: string }>;
 
@@ -58,7 +58,7 @@ export async function buscarFinanceiro(req: IdParam, res: Response) {
 export async function atualizarFinanceiro(req: IdParam, res: Response) {
   try {
     const dados = financeiroSchema.parse(req.body);
-    const usuario = getUsuario(req);
+    const usuario = req.user?.userName || "sistema";
 
     const anterior = await prisma.financeiro.findFirst({ where: { processoId: req.params.id, workspaceId: req.workspaceId! } });
 
@@ -96,17 +96,6 @@ export async function atualizarFinanceiro(req: IdParam, res: Response) {
       },
     });
 
-    await registrarAuditoria({
-      entidade: "Financeiro",
-      entidadeId: financeiro.id,
-      acao: anterior ? "ATUALIZACAO" : "CRIACAO",
-      dadosAnteriores: anterior,
-      dadosNovos: financeiro,
-      usuario,
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
-    });
-
     return res.json(financeiro);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -137,16 +126,6 @@ export async function adicionarParcela(req: IdParam, res: Response) {
       },
     });
 
-    await registrarAuditoria({
-      entidade: "Parcela",
-      entidadeId: parcela.id,
-      acao: "CRIACAO",
-      dadosNovos: parcela,
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
-    });
-
     return res.status(201).json(parcela);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -162,7 +141,6 @@ export async function atualizarParcela(
 ) {
   try {
     const dados = parcelaSchema.partial().parse(req.body);
-    const anterior = await prisma.parcela.findFirst({ where: { id: req.params.parcelaId, workspaceId: req.workspaceId! } });
 
     const parcela = await prisma.parcela.update({
       where: { id: req.params.parcelaId },
@@ -170,17 +148,6 @@ export async function atualizarParcela(
         ...dados,
         status: dados.status as StatusParcela | undefined,
       },
-    });
-
-    await registrarAuditoria({
-      entidade: "Parcela",
-      entidadeId: parcela.id,
-      acao: "ATUALIZACAO",
-      dadosAnteriores: anterior,
-      dadosNovos: parcela,
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
     });
 
     return res.json(parcela);
@@ -197,22 +164,9 @@ export async function excluirParcela(
   res: Response
 ) {
   try {
-    const usuario = getUsuario(req);
-    const anterior = await prisma.parcela.findFirst({ where: { id: req.params.parcelaId, workspaceId: req.workspaceId! } });
-
     await prisma.parcela.update({
       where: { id: req.params.parcelaId },
-      data: { deletadoEm: new Date(), deletadoPor: usuario },
-    });
-
-    await registrarAuditoria({
-      entidade: "Parcela",
-      entidadeId: req.params.parcelaId,
-      acao: "EXCLUSAO",
-      dadosAnteriores: anterior,
-      usuario,
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
+      data: { deletadoEm: new Date(), deletadoPor: req.user?.userName || "sistema" },
     });
 
     return res.status(204).send();

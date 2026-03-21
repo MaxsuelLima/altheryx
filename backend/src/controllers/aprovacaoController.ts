@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { Prognostico, FormaPagamento } from "@prisma/client";
-import { registrarAuditoria, getUsuario, getIp } from "../lib/auditService";
 
 export async function listarAprovacoes(req: Request, res: Response) {
   try {
@@ -35,7 +34,7 @@ export async function buscarAprovacao(req: Request<{ id: string }>, res: Respons
 
 export async function aprovarAlteracao(req: Request<{ id: string }>, res: Response) {
   try {
-    const usuario = getUsuario(req);
+    const usuario = req.user?.userName || "sistema";
     const aprovacao = await prisma.aprovacaoPendente.findFirst({
       where: { id: req.params.id, workspaceId: req.workspaceId! },
     });
@@ -48,43 +47,21 @@ export async function aprovarAlteracao(req: Request<{ id: string }>, res: Respon
     const dados = aprovacao.dadosPropostos as Record<string, unknown>;
 
     if (aprovacao.entidade === "Processo") {
-      const anterior = await prisma.processo.findUnique({ where: { id: aprovacao.entidadeId } });
-      const atualizado = await prisma.processo.update({
+      await prisma.processo.update({
         where: { id: aprovacao.entidadeId },
         data: {
           ...dados,
           valorCausa: dados.valorCausa !== undefined ? (dados.valorCausa as number ?? undefined) : undefined,
         },
       });
-      await registrarAuditoria({
-        entidade: "Processo",
-        entidadeId: aprovacao.entidadeId,
-        acao: "ATUALIZACAO",
-        dadosAnteriores: anterior,
-        dadosNovos: atualizado,
-        usuario,
-        ip: getIp(req),
-        workspaceId: req.workspaceId,
-      });
     } else if (aprovacao.entidade === "Financeiro") {
-      const anterior = await prisma.financeiro.findUnique({ where: { id: aprovacao.entidadeId } });
-      const atualizado = await prisma.financeiro.update({
+      await prisma.financeiro.update({
         where: { id: aprovacao.entidadeId },
         data: {
           ...dados,
           prognostico: dados.prognostico as Prognostico | undefined,
           formaPagamento: dados.formaPagamento as FormaPagamento | undefined,
         },
-      });
-      await registrarAuditoria({
-        entidade: "Financeiro",
-        entidadeId: aprovacao.entidadeId,
-        acao: "ATUALIZACAO",
-        dadosAnteriores: anterior,
-        dadosNovos: atualizado,
-        usuario,
-        ip: getIp(req),
-        workspaceId: req.workspaceId,
       });
     }
 
@@ -105,7 +82,7 @@ export async function aprovarAlteracao(req: Request<{ id: string }>, res: Respon
 
 export async function rejeitarAlteracao(req: Request<{ id: string }>, res: Response) {
   try {
-    const usuario = getUsuario(req);
+    const usuario = req.user?.userName || "sistema";
     const { motivo } = req.body as { motivo?: string };
 
     const aprovacao = await prisma.aprovacaoPendente.findFirst({

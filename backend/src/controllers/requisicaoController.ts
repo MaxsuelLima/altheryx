@@ -2,8 +2,6 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
 import { AreaRequisicao, TipoRequisicao, PrioridadeRequisicao, StatusRequisicao } from "@prisma/client";
-import { registrarAuditoria, getUsuario, getWorkspaceId, getIp } from "../lib/auditService";
-
 type IdParam = Request<{ id: string }>;
 
 const requisicaoSchema = z.object({
@@ -42,7 +40,6 @@ export async function listarRequisicoes(req: Request, res: Response) {
 
     const requisicoes = await prisma.requisicao.findMany({
       where: {
-        deletadoEm: null,
         workspaceId: req.workspaceId!,
         ...(busca && {
           OR: [
@@ -70,7 +67,7 @@ export async function buscarRequisicao(req: IdParam, res: Response) {
     const requisicao = await prisma.requisicao.findFirst({
       where: { id: req.params.id, workspaceId: req.workspaceId! },
     });
-    if (!requisicao || requisicao.deletadoEm) return res.status(404).json({ error: "Requisição não encontrada" });
+    if (!requisicao) return res.status(404).json({ error: "Requisição não encontrada" });
     return res.json(requisicao);
   } catch (error) {
     return res.status(500).json({ error: "Erro ao buscar requisição" });
@@ -90,16 +87,6 @@ export async function criarRequisicao(req: Request, res: Response) {
       },
     });
 
-    await registrarAuditoria({
-      entidade: "Requisicao",
-      entidadeId: requisicao.id,
-      acao: "CRIACAO",
-      dadosNovos: requisicao,
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
-    });
-
     return res.status(201).json(requisicao);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -112,7 +99,6 @@ export async function criarRequisicao(req: Request, res: Response) {
 export async function atualizarRequisicao(req: IdParam, res: Response) {
   try {
     const dados = requisicaoSchema.partial().parse(req.body);
-    const anterior = await prisma.requisicao.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     const extra: Record<string, unknown> = {};
     if (req.body.status) extra.status = req.body.status as StatusRequisicao;
@@ -134,17 +120,6 @@ export async function atualizarRequisicao(req: IdParam, res: Response) {
       },
     });
 
-    await registrarAuditoria({
-      entidade: "Requisicao",
-      entidadeId: requisicao.id,
-      acao: "ATUALIZACAO",
-      dadosAnteriores: anterior,
-      dadosNovos: requisicao,
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
-    });
-
     return res.json(requisicao);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -156,22 +131,9 @@ export async function atualizarRequisicao(req: IdParam, res: Response) {
 
 export async function excluirRequisicao(req: IdParam, res: Response) {
   try {
-    const usuario = getUsuario(req);
-    const anterior = await prisma.requisicao.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
-
     await prisma.requisicao.update({
       where: { id: req.params.id },
-      data: { deletadoEm: new Date(), deletadoPor: usuario },
-    });
-
-    await registrarAuditoria({
-      entidade: "Requisicao",
-      entidadeId: req.params.id,
-      acao: "EXCLUSAO",
-      dadosAnteriores: anterior,
-      usuario,
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
+      data: { deletadoEm: new Date(), deletadoPor: req.user?.userName || "sistema" },
     });
 
     return res.status(204).send();
@@ -183,20 +145,20 @@ export async function excluirRequisicao(req: IdParam, res: Response) {
 export async function dashboardRequisicoes(req: Request, res: Response) {
   try {
     const [total, porStatus, porArea, porPrioridade] = await Promise.all([
-      prisma.requisicao.count({ where: { deletadoEm: null, workspaceId: req.workspaceId! } }),
+      prisma.requisicao.count({ where: { workspaceId: req.workspaceId! } }),
       prisma.requisicao.groupBy({
         by: ["status"],
         _count: { id: true },
-        where: { deletadoEm: null, workspaceId: req.workspaceId! },
+        where: { workspaceId: req.workspaceId! },
       }),
       prisma.requisicao.groupBy({
         by: ["area"],
         _count: { id: true },
-        where: { deletadoEm: null, workspaceId: req.workspaceId! },
+        where: { workspaceId: req.workspaceId! },
       }),
       prisma.requisicao.groupBy({
         by: ["prioridade"],
-        where: { deletadoEm: null, workspaceId: req.workspaceId!, status: { in: ["ABERTA", "EM_ANALISE", "EM_ANDAMENTO"] } },
+        where: { workspaceId: req.workspaceId!, status: { in: ["ABERTA", "EM_ANALISE", "EM_ANDAMENTO"] } },
         _count: { id: true },
       }),
     ]);

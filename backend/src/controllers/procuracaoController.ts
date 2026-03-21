@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
 import { StatusProcuracao, TipoProcuracao } from "@prisma/client";
-import { registrarAuditoria, getUsuario, getWorkspaceId, getIp } from "../lib/auditService";
 
 type IdParam = Request<{ id: string }>;
 
@@ -29,7 +28,6 @@ export async function listarProcuracoes(req: Request, res: Response) {
 
     const procuracoes = await prisma.procuracao.findMany({
       where: {
-        deletadoEm: null,
         workspaceId: req.workspaceId!,
         ...(busca && {
           OR: [
@@ -58,7 +56,7 @@ export async function buscarProcuracao(req: IdParam, res: Response) {
       where: { id: req.params.id, workspaceId: req.workspaceId! },
       include: { processo: { select: { id: true, numeroProcesso: true } } },
     });
-    if (!procuracao || procuracao.deletadoEm) return res.status(404).json({ error: "Procuração não encontrada" });
+    if (!procuracao) return res.status(404).json({ error: "Procuração não encontrada" });
     return res.json(procuracao);
   } catch (error) {
     return res.status(500).json({ error: "Erro ao buscar procuração" });
@@ -78,16 +76,6 @@ export async function criarProcuracao(req: Request, res: Response) {
       include: { processo: { select: { id: true, numeroProcesso: true } } },
     });
 
-    await registrarAuditoria({
-      entidade: "Procuracao",
-      entidadeId: procuracao.id,
-      acao: "CRIACAO",
-      dadosNovos: procuracao,
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
-    });
-
     return res.status(201).json(procuracao);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -100,7 +88,6 @@ export async function criarProcuracao(req: Request, res: Response) {
 export async function atualizarProcuracao(req: IdParam, res: Response) {
   try {
     const dados = procuracaoSchema.partial().parse(req.body);
-    const anterior = await prisma.procuracao.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     const procuracao = await prisma.procuracao.update({
       where: { id: req.params.id },
@@ -110,17 +97,6 @@ export async function atualizarProcuracao(req: IdParam, res: Response) {
         status: dados.status as StatusProcuracao | undefined,
       },
       include: { processo: { select: { id: true, numeroProcesso: true } } },
-    });
-
-    await registrarAuditoria({
-      entidade: "Procuracao",
-      entidadeId: procuracao.id,
-      acao: "ATUALIZACAO",
-      dadosAnteriores: anterior,
-      dadosNovos: procuracao,
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
     });
 
     return res.json(procuracao);
@@ -134,22 +110,9 @@ export async function atualizarProcuracao(req: IdParam, res: Response) {
 
 export async function excluirProcuracao(req: IdParam, res: Response) {
   try {
-    const usuario = getUsuario(req);
-    const anterior = await prisma.procuracao.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
-
     await prisma.procuracao.update({
       where: { id: req.params.id },
-      data: { deletadoEm: new Date(), deletadoPor: usuario },
-    });
-
-    await registrarAuditoria({
-      entidade: "Procuracao",
-      entidadeId: req.params.id,
-      acao: "EXCLUSAO",
-      dadosAnteriores: anterior,
-      usuario,
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
+      data: { deletadoEm: new Date(), deletadoPor: req.user?.userName || "sistema" },
     });
 
     return res.status(204).send();
@@ -166,7 +129,6 @@ export async function alertasRenovacao(req: Request, res: Response) {
 
     const alertas = await prisma.procuracao.findMany({
       where: {
-        deletadoEm: null,
         workspaceId: req.workspaceId!,
         status: "VIGENTE",
         dataValidade: { not: null, lte: em30dias },

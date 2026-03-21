@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
 import { FaseProcessual } from "@prisma/client";
-import { registrarAuditoria, getUsuario, criarAprovacao, ENTIDADES_SENSIVEIS, getIp } from "../lib/auditService";
+import { criarAprovacao, ENTIDADES_SENSIVEIS } from "../lib/auditService";
 import { detectarFase, calcularCorrecaoMonetaria, INDICES_DISPONIVEIS } from "../lib/faseProcessual";
 
 type IdParam = Request<{ id: string }>;
@@ -31,7 +31,6 @@ export async function listarProcessos(req: Request, res: Response) {
     const processos = await prisma.processo.findMany({
       where: {
         workspaceId: req.workspaceId!,
-        deletadoEm: null,
         ...(busca && {
           OR: [
             { numeroProcesso: { contains: busca } },
@@ -71,7 +70,7 @@ export async function buscarProcesso(req: IdParam, res: Response) {
       },
     });
 
-    if (!processo || processo.deletadoEm) return res.status(404).json({ error: "Processo não encontrado" });
+    if (!processo) return res.status(404).json({ error: "Processo não encontrado" });
     return res.json(processo);
   } catch (error) {
     return res.status(500).json({ error: "Erro ao buscar processo" });
@@ -90,16 +89,6 @@ export async function criarProcesso(req: Request, res: Response) {
       },
     });
 
-    await registrarAuditoria({
-      entidade: "Processo",
-      entidadeId: processo.id,
-      acao: "CRIACAO",
-      dadosNovos: processo,
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
-    });
-
     return res.status(201).json(processo);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -112,7 +101,6 @@ export async function criarProcesso(req: Request, res: Response) {
 export async function atualizarProcesso(req: IdParam, res: Response) {
   try {
     const dados = processoSchema.partial().parse(req.body);
-    const usuario = getUsuario(req);
     const anterior = await prisma.processo.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     if (!anterior) return res.status(404).json({ error: "Processo não encontrado" });
@@ -123,7 +111,7 @@ export async function atualizarProcesso(req: IdParam, res: Response) {
         entidadeId: req.params.id,
         dadosAtuais: anterior,
         dadosPropostos: dados,
-        solicitadoPor: usuario,
+        solicitadoPor: req.user?.userName || "sistema",
         workspaceId: req.workspaceId,
       });
       return res.status(202).json({
@@ -141,17 +129,6 @@ export async function atualizarProcesso(req: IdParam, res: Response) {
       },
     });
 
-    await registrarAuditoria({
-      entidade: "Processo",
-      entidadeId: processo.id,
-      acao: "ATUALIZACAO",
-      dadosAnteriores: anterior,
-      dadosNovos: processo,
-      usuario,
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
-    });
-
     return res.json(processo);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -163,22 +140,9 @@ export async function atualizarProcesso(req: IdParam, res: Response) {
 
 export async function excluirProcesso(req: IdParam, res: Response) {
   try {
-    const usuario = getUsuario(req);
-    const anterior = await prisma.processo.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
-
     await prisma.processo.update({
       where: { id: req.params.id },
-      data: { deletadoEm: new Date(), deletadoPor: usuario },
-    });
-
-    await registrarAuditoria({
-      entidade: "Processo",
-      entidadeId: req.params.id,
-      acao: "EXCLUSAO",
-      dadosAnteriores: anterior,
-      usuario,
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
+      data: { deletadoEm: new Date(), deletadoPor: req.user?.userName || "sistema" },
     });
 
     return res.status(204).send();
@@ -212,16 +176,6 @@ export async function adicionarMovimentacao(req: IdParam, res: Response) {
       },
     });
 
-    await registrarAuditoria({
-      entidade: "Movimentacao",
-      entidadeId: movimentacao.id,
-      acao: "CRIACAO",
-      dadosNovos: { ...movimentacao, faseDetectada },
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
-    });
-
     return res.status(201).json({ ...movimentacao, faseDetectada });
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -233,22 +187,9 @@ export async function adicionarMovimentacao(req: IdParam, res: Response) {
 
 export async function excluirMovimentacao(req: Request<{ id: string; movId: string }>, res: Response) {
   try {
-    const usuario = getUsuario(req);
-    const anterior = await prisma.movimentacao.findFirst({ where: { id: req.params.movId, workspaceId: req.workspaceId! } });
-
     await prisma.movimentacao.update({
       where: { id: req.params.movId },
-      data: { deletadoEm: new Date(), deletadoPor: usuario },
-    });
-
-    await registrarAuditoria({
-      entidade: "Movimentacao",
-      entidadeId: req.params.movId,
-      acao: "EXCLUSAO",
-      dadosAnteriores: anterior,
-      usuario,
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
+      data: { deletadoEm: new Date(), deletadoPor: req.user?.userName || "sistema" },
     });
 
     return res.status(204).send();
@@ -344,7 +285,7 @@ export async function removerPreposto(req: Request<{ id: string; prepostoId: str
 export async function duracaoMedia(req: Request, res: Response) {
   try {
     const encerrados = await prisma.processo.findMany({
-      where: { workspaceId: req.workspaceId!, deletadoEm: null, status: "ENCERRADO" },
+      where: { workspaceId: req.workspaceId!, status: "ENCERRADO" },
       select: { competencia: true, comarca: true, criadoEm: true, atualizadoEm: true },
     });
 

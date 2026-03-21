@@ -2,8 +2,6 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
 import { TipoPrazo, StatusPrazo } from "@prisma/client";
-import { registrarAuditoria, getUsuario, getIp } from "../lib/auditService";
-
 type IdParam = Request<{ id: string }>;
 
 const prazoSchema = z.object({
@@ -40,7 +38,6 @@ export async function listarPrazos(req: Request, res: Response) {
     const prazos = await prisma.prazo.findMany({
       where: {
         workspaceId: req.workspaceId!,
-        deletadoEm: null,
         ...(status && { status: status as StatusPrazo }),
         ...(tipo && { tipo: tipo as TipoPrazo }),
         ...dateFilter,
@@ -68,7 +65,7 @@ export async function buscarPrazo(req: IdParam, res: Response) {
       },
     });
 
-    if (!prazo || prazo.deletadoEm) return res.status(404).json({ error: "Prazo não encontrado" });
+    if (!prazo) return res.status(404).json({ error: "Prazo não encontrado" });
     return res.json(prazo);
   } catch (error) {
     return res.status(500).json({ error: "Erro ao buscar prazo" });
@@ -96,16 +93,6 @@ export async function criarPrazo(req: Request, res: Response) {
       },
     });
 
-    await registrarAuditoria({
-      entidade: "Prazo",
-      entidadeId: prazo.id,
-      acao: "CRIACAO",
-      dadosNovos: prazo,
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
-    });
-
     return res.status(201).json(prazo);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -118,7 +105,6 @@ export async function criarPrazo(req: Request, res: Response) {
 export async function atualizarPrazo(req: IdParam, res: Response) {
   try {
     const { testemunhaIds, ...dados } = prazoSchema.partial().parse(req.body);
-    const anterior = await prisma.prazo.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     if (testemunhaIds !== undefined) {
       await prisma.prazoTestemunha.deleteMany({ where: { prazoId: req.params.id } });
@@ -142,17 +128,6 @@ export async function atualizarPrazo(req: IdParam, res: Response) {
       },
     });
 
-    await registrarAuditoria({
-      entidade: "Prazo",
-      entidadeId: prazo.id,
-      acao: "ATUALIZACAO",
-      dadosAnteriores: anterior,
-      dadosNovos: prazo,
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
-    });
-
     return res.json(prazo);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -164,22 +139,9 @@ export async function atualizarPrazo(req: IdParam, res: Response) {
 
 export async function excluirPrazo(req: IdParam, res: Response) {
   try {
-    const usuario = getUsuario(req);
-    const anterior = await prisma.prazo.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
-
     await prisma.prazo.update({
       where: { id: req.params.id },
-      data: { deletadoEm: new Date(), deletadoPor: usuario },
-    });
-
-    await registrarAuditoria({
-      entidade: "Prazo",
-      entidadeId: req.params.id,
-      acao: "EXCLUSAO",
-      dadosAnteriores: anterior,
-      usuario,
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
+      data: { deletadoEm: new Date(), deletadoPor: req.user?.userName || "sistema" },
     });
 
     return res.status(204).send();
@@ -191,22 +153,10 @@ export async function excluirPrazo(req: IdParam, res: Response) {
 export async function marcarStatus(req: IdParam, res: Response) {
   try {
     const { status } = z.object({ status: z.enum(["PENDENTE", "CUMPRIDO", "PERDIDO"]) }).parse(req.body);
-    const anterior = await prisma.prazo.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     const prazo = await prisma.prazo.update({
       where: { id: req.params.id },
       data: { status: status as StatusPrazo },
-    });
-
-    await registrarAuditoria({
-      entidade: "Prazo",
-      entidadeId: prazo.id,
-      acao: "ATUALIZACAO",
-      dadosAnteriores: { status: anterior?.status },
-      dadosNovos: { status: prazo.status },
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
     });
 
     return res.json(prazo);

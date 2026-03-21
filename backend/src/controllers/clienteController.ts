@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
-import { registrarAuditoria, getUsuario, getWorkspaceId, getIp } from "../lib/auditService";
 
 const clienteSchema = z.object({
   nome: z.string().min(2),
@@ -25,7 +24,6 @@ export async function listarClientes(req: Request, res: Response) {
 
     const clientes = await prisma.cliente.findMany({
       where: {
-        deletadoEm: null,
         workspaceId: req.workspaceId!,
         ...(busca && {
           OR: [
@@ -52,7 +50,7 @@ export async function buscarCliente(req: IdParam, res: Response) {
       include: { partesProcesso: { include: { processo: true } } },
     });
 
-    if (!cliente || cliente.deletadoEm) return res.status(404).json({ error: "Cliente não encontrado" });
+    if (!cliente) return res.status(404).json({ error: "Cliente não encontrado" });
     return res.json(cliente);
   } catch (error) {
     return res.status(500).json({ error: "Erro ao buscar cliente" });
@@ -63,16 +61,6 @@ export async function criarCliente(req: Request, res: Response) {
   try {
     const dados = clienteSchema.parse(req.body);
     const cliente = await prisma.cliente.create({ data: { ...dados, workspaceId: req.workspaceId! } });
-
-    await registrarAuditoria({
-      entidade: "Cliente",
-      entidadeId: cliente.id,
-      acao: "CRIACAO",
-      dadosNovos: cliente,
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
-    });
 
     return res.status(201).json(cliente);
   } catch (error) {
@@ -86,22 +74,10 @@ export async function criarCliente(req: Request, res: Response) {
 export async function atualizarCliente(req: IdParam, res: Response) {
   try {
     const dados = clienteSchema.partial().parse(req.body);
-    const anterior = await prisma.cliente.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     const cliente = await prisma.cliente.update({
       where: { id: req.params.id },
       data: dados,
-    });
-
-    await registrarAuditoria({
-      entidade: "Cliente",
-      entidadeId: cliente.id,
-      acao: "ATUALIZACAO",
-      dadosAnteriores: anterior,
-      dadosNovos: cliente,
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
     });
 
     return res.json(cliente);
@@ -115,22 +91,9 @@ export async function atualizarCliente(req: IdParam, res: Response) {
 
 export async function excluirCliente(req: IdParam, res: Response) {
   try {
-    const usuario = getUsuario(req);
-    const anterior = await prisma.cliente.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
-
     await prisma.cliente.update({
       where: { id: req.params.id },
-      data: { deletadoEm: new Date(), deletadoPor: usuario },
-    });
-
-    await registrarAuditoria({
-      entidade: "Cliente",
-      entidadeId: req.params.id,
-      acao: "EXCLUSAO",
-      dadosAnteriores: anterior,
-      usuario,
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
+      data: { deletadoEm: new Date(), deletadoPor: req.user?.userName || "sistema" },
     });
 
     return res.status(204).send();

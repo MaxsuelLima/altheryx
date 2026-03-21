@@ -2,8 +2,6 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { hashPassword } from "../lib/auth";
 import { z } from "zod";
-import { registrarAuditoria, getIp } from "../lib/auditService";
-
 const usuarioSchema = z.object({
   nome: z.string().min(2),
   email: z.string().email(),
@@ -17,7 +15,6 @@ export async function listarUsuarios(req: Request, res: Response) {
     const usuarios = await prisma.usuario.findMany({
       where: {
         workspaceId: req.workspaceId!,
-        deletadoEm: null,
       },
       select: {
         id: true,
@@ -41,7 +38,7 @@ export async function criarUsuario(req: Request, res: Response) {
     const dados = usuarioSchema.parse(req.body);
 
     const existente = await prisma.usuario.findFirst({
-      where: { email: dados.email, workspaceId: req.workspaceId!, deletadoEm: null },
+      where: { email: dados.email, workspaceId: req.workspaceId! },
     });
     if (existente) {
       return res.status(409).json({ error: "Já existe um usuário com esse email neste workspace" });
@@ -60,16 +57,6 @@ export async function criarUsuario(req: Request, res: Response) {
       select: { id: true, nome: true, email: true, role: true, isAdmin: true },
     });
 
-    await registrarAuditoria({
-      entidade: "Usuario",
-      entidadeId: usuario.id,
-      acao: "CRIACAO",
-      dadosNovos: usuario,
-      usuario: req.user!.userName,
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
-    });
-
     return res.status(201).json(usuario);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -82,13 +69,6 @@ export async function criarUsuario(req: Request, res: Response) {
 export async function atualizarUsuario(req: Request, res: Response) {
   try {
     const dados = usuarioSchema.partial().parse(req.body);
-
-    const anterior = await prisma.usuario.findFirst({
-      where: { id: (req.params.id as string), workspaceId: req.workspaceId!, deletadoEm: null },
-    });
-    if (!anterior) {
-      return res.status(404).json({ error: "Usuário não encontrado" });
-    }
 
     const updateData: Record<string, unknown> = {};
     if (dados.nome) updateData.nome = dados.nome;
@@ -104,17 +84,6 @@ export async function atualizarUsuario(req: Request, res: Response) {
       select: { id: true, nome: true, email: true, role: true, isAdmin: true, ativo: true },
     });
 
-    await registrarAuditoria({
-      entidade: "Usuario",
-      entidadeId: usuario.id,
-      acao: "ATUALIZACAO",
-      dadosAnteriores: anterior,
-      dadosNovos: usuario,
-      usuario: req.user!.userName,
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
-    });
-
     return res.json(usuario);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -127,7 +96,7 @@ export async function atualizarUsuario(req: Request, res: Response) {
 export async function excluirUsuario(req: Request, res: Response) {
   try {
     const anterior = await prisma.usuario.findFirst({
-      where: { id: (req.params.id as string), workspaceId: req.workspaceId!, deletadoEm: null },
+      where: { id: (req.params.id as string), workspaceId: req.workspaceId! },
     });
     if (!anterior) {
       return res.status(404).json({ error: "Usuário não encontrado" });
@@ -140,16 +109,6 @@ export async function excluirUsuario(req: Request, res: Response) {
     await prisma.usuario.update({
       where: { id: (req.params.id as string) },
       data: { deletadoEm: new Date(), deletadoPor: req.user!.userName },
-    });
-
-    await registrarAuditoria({
-      entidade: "Usuario",
-      entidadeId: (req.params.id as string),
-      acao: "EXCLUSAO",
-      dadosAnteriores: anterior,
-      usuario: req.user!.userName,
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
     });
 
     return res.status(204).send();

@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { OrigemDocumento, FlagDecisao, ClassificacaoAnexo } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { uploadDir } from "../lib/upload";
-import { registrarAuditoria, getUsuario, getIp } from "../lib/auditService";
 import path from "path";
 import fs from "fs";
 
@@ -15,7 +14,6 @@ export async function listarDocumentos(req: Request<{ id: string }>, res: Respon
       where: {
         workspaceId: req.workspaceId!,
         processoId: req.params.id,
-        deletadoEm: null,
         documentoPaiId: null,
         ...(origem && { origem: origem as never }),
         ...(flagDecisao && { flagDecisao: flagDecisao as never }),
@@ -60,16 +58,6 @@ export async function uploadDocumento(req: Request<{ id: string }>, res: Respons
       },
     });
 
-    await registrarAuditoria({
-      entidade: "Documento",
-      entidadeId: documento.id,
-      acao: "CRIACAO",
-      dadosNovos: { id: documento.id, nomeOriginal: documento.nomeOriginal, processoId: req.params.id },
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
-    });
-
     return res.status(201).json(documento);
   } catch (error) {
     return res.status(500).json({ error: "Erro ao fazer upload" });
@@ -82,7 +70,7 @@ export async function downloadDocumento(req: Request<{ id: string; docId: string
       where: { id: req.params.docId, workspaceId: req.workspaceId! },
     });
 
-    if (!documento || documento.deletadoEm) {
+    if (!documento) {
       return res.status(404).json({ error: "Documento não encontrado" });
     }
 
@@ -108,7 +96,7 @@ export async function visualizarDocumento(req: Request<{ id: string; docId: stri
       where: { id: req.params.docId, workspaceId: req.workspaceId! },
     });
 
-    if (!documento || documento.deletadoEm) {
+    if (!documento) {
       return res.status(404).json({ error: "Documento não encontrado" });
     }
 
@@ -130,8 +118,6 @@ export async function visualizarDocumento(req: Request<{ id: string; docId: stri
 
 export async function atualizarDocumento(req: Request<{ id: string; docId: string }>, res: Response) {
   try {
-    const anterior = await prisma.documento.findFirst({ where: { id: req.params.docId, workspaceId: req.workspaceId! } });
-
     const documento = await prisma.documento.update({
       where: { id: req.params.docId },
       data: {
@@ -142,17 +128,6 @@ export async function atualizarDocumento(req: Request<{ id: string; docId: strin
         ...(req.body.dataDocumento && { dataDocumento: new Date(req.body.dataDocumento) }),
         ...(req.body.documentoPaiId !== undefined && { documentoPaiId: req.body.documentoPaiId || null }),
       },
-    });
-
-    await registrarAuditoria({
-      entidade: "Documento",
-      entidadeId: documento.id,
-      acao: "ATUALIZACAO",
-      dadosAnteriores: anterior,
-      dadosNovos: documento,
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
     });
 
     return res.json(documento);
@@ -171,21 +146,9 @@ export async function excluirDocumento(req: Request<{ id: string; docId: string 
       return res.status(404).json({ error: "Documento não encontrado" });
     }
 
-    const usuario = getUsuario(req);
-
     await prisma.documento.update({
       where: { id: req.params.docId },
-      data: { deletadoEm: new Date(), deletadoPor: usuario },
-    });
-
-    await registrarAuditoria({
-      entidade: "Documento",
-      entidadeId: req.params.docId,
-      acao: "EXCLUSAO",
-      dadosAnteriores: { id: documento.id, nomeOriginal: documento.nomeOriginal },
-      usuario,
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
+      data: { deletadoEm: new Date(), deletadoPor: req.user?.userName || "sistema" },
     });
 
     return res.status(204).send();

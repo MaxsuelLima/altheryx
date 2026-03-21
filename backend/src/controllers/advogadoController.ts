@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
-import { registrarAuditoria, getUsuario, getWorkspaceId, getIp } from "../lib/auditService";
 
 const advogadoSchema = z.object({
   nome: z.string().min(2),
@@ -21,7 +20,6 @@ export async function listarAdvogados(req: Request, res: Response) {
 
     const advogados = await prisma.advogado.findMany({
       where: {
-        deletadoEm: null,
         workspaceId: req.workspaceId!,
         ...(busca && {
           OR: [
@@ -50,7 +48,7 @@ export async function buscarAdvogado(req: IdParam, res: Response) {
       },
     });
 
-    if (!advogado || advogado.deletadoEm) return res.status(404).json({ error: "Advogado não encontrado" });
+    if (!advogado) return res.status(404).json({ error: "Advogado não encontrado" });
     return res.json(advogado);
   } catch (error) {
     return res.status(500).json({ error: "Erro ao buscar advogado" });
@@ -65,16 +63,6 @@ export async function criarAdvogado(req: Request, res: Response) {
       include: { escritorio: { select: { id: true, nome: true } } },
     });
 
-    await registrarAuditoria({
-      entidade: "Advogado",
-      entidadeId: advogado.id,
-      acao: "CRIACAO",
-      dadosNovos: advogado,
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
-    });
-
     return res.status(201).json(advogado);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -87,23 +75,11 @@ export async function criarAdvogado(req: Request, res: Response) {
 export async function atualizarAdvogado(req: IdParam, res: Response) {
   try {
     const dados = advogadoSchema.partial().parse(req.body);
-    const anterior = await prisma.advogado.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     const advogado = await prisma.advogado.update({
       where: { id: req.params.id },
       data: dados,
       include: { escritorio: { select: { id: true, nome: true } } },
-    });
-
-    await registrarAuditoria({
-      entidade: "Advogado",
-      entidadeId: advogado.id,
-      acao: "ATUALIZACAO",
-      dadosAnteriores: anterior,
-      dadosNovos: advogado,
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
     });
 
     return res.json(advogado);
@@ -117,22 +93,9 @@ export async function atualizarAdvogado(req: IdParam, res: Response) {
 
 export async function excluirAdvogado(req: IdParam, res: Response) {
   try {
-    const usuario = getUsuario(req);
-    const anterior = await prisma.advogado.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
-
     await prisma.advogado.update({
       where: { id: req.params.id },
-      data: { deletadoEm: new Date(), deletadoPor: usuario },
-    });
-
-    await registrarAuditoria({
-      entidade: "Advogado",
-      entidadeId: req.params.id,
-      acao: "EXCLUSAO",
-      dadosAnteriores: anterior,
-      usuario,
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
+      data: { deletadoEm: new Date(), deletadoPor: req.user?.userName || "sistema" },
     });
 
     return res.status(204).send();

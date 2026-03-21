@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
-import { registrarAuditoria, getUsuario, getWorkspaceId, getIp } from "../lib/auditService";
 
 type IdParam = Request<{ id: string }>;
 
@@ -34,7 +33,6 @@ export async function listarEventos(req: Request, res: Response) {
 
     const eventos = await prisma.calendarioTribunal.findMany({
       where: {
-        deletadoEm: null,
         workspaceId: req.workspaceId!,
         ...(tribunal && { tribunal: { contains: tribunal, mode: "insensitive" as const } }),
         ...dateFilter,
@@ -53,16 +51,6 @@ export async function criarEvento(req: Request, res: Response) {
     const dados = calendarioSchema.parse(req.body);
     const evento = await prisma.calendarioTribunal.create({ data: { ...dados, workspaceId: req.workspaceId! } });
 
-    await registrarAuditoria({
-      entidade: "CalendarioTribunal",
-      entidadeId: evento.id,
-      acao: "CRIACAO",
-      dadosNovos: evento,
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
-    });
-
     return res.status(201).json(evento);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -75,22 +63,10 @@ export async function criarEvento(req: Request, res: Response) {
 export async function atualizarEvento(req: IdParam, res: Response) {
   try {
     const dados = calendarioSchema.partial().parse(req.body);
-    const anterior = await prisma.calendarioTribunal.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     const evento = await prisma.calendarioTribunal.update({
       where: { id: req.params.id },
       data: dados,
-    });
-
-    await registrarAuditoria({
-      entidade: "CalendarioTribunal",
-      entidadeId: evento.id,
-      acao: "ATUALIZACAO",
-      dadosAnteriores: anterior,
-      dadosNovos: evento,
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
     });
 
     return res.json(evento);
@@ -104,22 +80,9 @@ export async function atualizarEvento(req: IdParam, res: Response) {
 
 export async function excluirEvento(req: IdParam, res: Response) {
   try {
-    const usuario = getUsuario(req);
-    const anterior = await prisma.calendarioTribunal.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
-
     await prisma.calendarioTribunal.update({
       where: { id: req.params.id },
-      data: { deletadoEm: new Date(), deletadoPor: usuario },
-    });
-
-    await registrarAuditoria({
-      entidade: "CalendarioTribunal",
-      entidadeId: req.params.id,
-      acao: "EXCLUSAO",
-      dadosAnteriores: anterior,
-      usuario,
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
+      data: { deletadoEm: new Date(), deletadoPor: req.user?.userName || "sistema" },
     });
 
     return res.status(204).send();
@@ -133,7 +96,7 @@ export async function listarTribunais(req: Request, res: Response) {
     const tribunais = await prisma.calendarioTribunal.findMany({
       select: { tribunal: true },
       distinct: ["tribunal"],
-      where: { deletadoEm: null, workspaceId: req.workspaceId! },
+      where: { workspaceId: req.workspaceId! },
       orderBy: { tribunal: "asc" },
     });
     return res.json(tribunais.map((t) => t.tribunal));

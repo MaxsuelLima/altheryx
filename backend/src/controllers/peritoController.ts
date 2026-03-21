@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
 import { TipoPerito } from "@prisma/client";
-import { registrarAuditoria, getUsuario, getWorkspaceId, getIp } from "../lib/auditService";
 
 const peritoSchema = z.object({
   nome: z.string().min(2),
@@ -23,7 +22,6 @@ export async function listarPeritos(req: Request, res: Response) {
 
     const peritos = await prisma.perito.findMany({
       where: {
-        deletadoEm: null,
         workspaceId: req.workspaceId!,
         ...(tipo && { tipo: tipo as TipoPerito }),
         ...(busca && {
@@ -55,7 +53,7 @@ export async function buscarPerito(req: IdParam, res: Response) {
       },
     });
 
-    if (!perito || perito.deletadoEm) return res.status(404).json({ error: "Perito não encontrado" });
+    if (!perito) return res.status(404).json({ error: "Perito não encontrado" });
     return res.json(perito);
   } catch (error) {
     return res.status(500).json({ error: "Erro ao buscar perito" });
@@ -73,16 +71,6 @@ export async function criarPerito(req: Request, res: Response) {
       },
     });
 
-    await registrarAuditoria({
-      entidade: "Perito",
-      entidadeId: perito.id,
-      acao: "CRIACAO",
-      dadosNovos: perito,
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
-    });
-
     return res.status(201).json(perito);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -95,7 +83,6 @@ export async function criarPerito(req: Request, res: Response) {
 export async function atualizarPerito(req: IdParam, res: Response) {
   try {
     const dados = peritoSchema.partial().parse(req.body);
-    const anterior = await prisma.perito.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     const perito = await prisma.perito.update({
       where: { id: req.params.id },
@@ -103,17 +90,6 @@ export async function atualizarPerito(req: IdParam, res: Response) {
         ...dados,
         tipo: dados.tipo as TipoPerito | undefined,
       },
-    });
-
-    await registrarAuditoria({
-      entidade: "Perito",
-      entidadeId: perito.id,
-      acao: "ATUALIZACAO",
-      dadosAnteriores: anterior,
-      dadosNovos: perito,
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
     });
 
     return res.json(perito);
@@ -127,22 +103,9 @@ export async function atualizarPerito(req: IdParam, res: Response) {
 
 export async function excluirPerito(req: IdParam, res: Response) {
   try {
-    const usuario = getUsuario(req);
-    const anterior = await prisma.perito.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
-
     await prisma.perito.update({
       where: { id: req.params.id },
-      data: { deletadoEm: new Date(), deletadoPor: usuario },
-    });
-
-    await registrarAuditoria({
-      entidade: "Perito",
-      entidadeId: req.params.id,
-      acao: "EXCLUSAO",
-      dadosAnteriores: anterior,
-      usuario,
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
+      data: { deletadoEm: new Date(), deletadoPor: req.user?.userName || "sistema" },
     });
 
     return res.status(204).send();

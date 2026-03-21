@@ -1,8 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
-import { registrarAuditoria, getUsuario, getWorkspaceId, getIp } from "../lib/auditService";
-
 type IdParam = Request<{ id: string }>;
 
 const publicacaoSchema = z.object({
@@ -20,7 +18,6 @@ export async function listarPublicacoes(req: Request, res: Response) {
 
     const publicacoes = await prisma.publicacao.findMany({
       where: {
-        deletadoEm: null,
         workspaceId: req.workspaceId!,
         ...(busca && {
           OR: [
@@ -51,16 +48,6 @@ export async function criarPublicacao(req: Request, res: Response) {
       include: { processo: { select: { id: true, numeroProcesso: true } } },
     });
 
-    await registrarAuditoria({
-      entidade: "Publicacao",
-      entidadeId: publicacao.id,
-      acao: "CRIACAO",
-      dadosNovos: publicacao,
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
-    });
-
     return res.status(201).json(publicacao);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -73,22 +60,10 @@ export async function criarPublicacao(req: Request, res: Response) {
 export async function atualizarPublicacao(req: IdParam, res: Response) {
   try {
     const dados = publicacaoSchema.partial().parse(req.body);
-    const anterior = await prisma.publicacao.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     const publicacao = await prisma.publicacao.update({
       where: { id: req.params.id },
       data: dados,
-    });
-
-    await registrarAuditoria({
-      entidade: "Publicacao",
-      entidadeId: publicacao.id,
-      acao: "ATUALIZACAO",
-      dadosAnteriores: anterior,
-      dadosNovos: publicacao,
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
     });
 
     return res.json(publicacao);
@@ -117,22 +92,9 @@ export async function marcarLida(req: IdParam, res: Response) {
 
 export async function excluirPublicacao(req: IdParam, res: Response) {
   try {
-    const usuario = getUsuario(req);
-    const anterior = await prisma.publicacao.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
-
     await prisma.publicacao.update({
       where: { id: req.params.id },
-      data: { deletadoEm: new Date(), deletadoPor: usuario },
-    });
-
-    await registrarAuditoria({
-      entidade: "Publicacao",
-      entidadeId: req.params.id,
-      acao: "EXCLUSAO",
-      dadosAnteriores: anterior,
-      usuario,
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
+      data: { deletadoEm: new Date(), deletadoPor: req.user?.userName || "sistema" },
     });
 
     return res.status(204).send();
@@ -150,7 +112,6 @@ export async function buscarPorPalavraChave(req: Request, res: Response) {
 
     const resultados = await prisma.publicacao.findMany({
       where: {
-        deletadoEm: null,
         workspaceId: req.workspaceId!,
         OR: [
           { palavraChave: { contains: palavra, mode: "insensitive" } },

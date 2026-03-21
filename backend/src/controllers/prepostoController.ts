@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
-import { registrarAuditoria, getUsuario, getWorkspaceId, getIp } from "../lib/auditService";
 
 const prepostoSchema = z.object({
   nome: z.string().min(2),
@@ -20,7 +19,6 @@ export async function listarPrepostos(req: Request, res: Response) {
 
     const prepostos = await prisma.preposto.findMany({
       where: {
-        deletadoEm: null,
         workspaceId: req.workspaceId!,
         ...(busca && {
           OR: [
@@ -51,7 +49,7 @@ export async function buscarPreposto(req: IdParam, res: Response) {
       },
     });
 
-    if (!preposto || preposto.deletadoEm) return res.status(404).json({ error: "Preposto não encontrado" });
+    if (!preposto) return res.status(404).json({ error: "Preposto não encontrado" });
     return res.json(preposto);
   } catch (error) {
     return res.status(500).json({ error: "Erro ao buscar preposto" });
@@ -62,16 +60,6 @@ export async function criarPreposto(req: Request, res: Response) {
   try {
     const dados = prepostoSchema.parse(req.body);
     const preposto = await prisma.preposto.create({ data: { ...dados, workspaceId: req.workspaceId! } });
-
-    await registrarAuditoria({
-      entidade: "Preposto",
-      entidadeId: preposto.id,
-      acao: "CRIACAO",
-      dadosNovos: preposto,
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
-    });
 
     return res.status(201).json(preposto);
   } catch (error) {
@@ -85,22 +73,10 @@ export async function criarPreposto(req: Request, res: Response) {
 export async function atualizarPreposto(req: IdParam, res: Response) {
   try {
     const dados = prepostoSchema.partial().parse(req.body);
-    const anterior = await prisma.preposto.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     const preposto = await prisma.preposto.update({
       where: { id: req.params.id },
       data: dados,
-    });
-
-    await registrarAuditoria({
-      entidade: "Preposto",
-      entidadeId: preposto.id,
-      acao: "ATUALIZACAO",
-      dadosAnteriores: anterior,
-      dadosNovos: preposto,
-      usuario: getUsuario(req),
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
     });
 
     return res.json(preposto);
@@ -114,22 +90,9 @@ export async function atualizarPreposto(req: IdParam, res: Response) {
 
 export async function excluirPreposto(req: IdParam, res: Response) {
   try {
-    const usuario = getUsuario(req);
-    const anterior = await prisma.preposto.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
-
     await prisma.preposto.update({
       where: { id: req.params.id },
-      data: { deletadoEm: new Date(), deletadoPor: usuario },
-    });
-
-    await registrarAuditoria({
-      entidade: "Preposto",
-      entidadeId: req.params.id,
-      acao: "EXCLUSAO",
-      dadosAnteriores: anterior,
-      usuario,
-      ip: getIp(req),
-      workspaceId: req.workspaceId,
+      data: { deletadoEm: new Date(), deletadoPor: req.user?.userName || "sistema" },
     });
 
     return res.status(204).send();
