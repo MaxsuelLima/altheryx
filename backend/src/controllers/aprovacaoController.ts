@@ -9,6 +9,7 @@ export async function listarAprovacoes(req: Request, res: Response) {
 
     const aprovacoes = await prisma.aprovacaoPendente.findMany({
       where: {
+        workspaceId: req.workspaceId!,
         ...(status ? { status: status as never } : { status: "PENDENTE" }),
       },
       orderBy: { criadoEm: "desc" },
@@ -22,8 +23,8 @@ export async function listarAprovacoes(req: Request, res: Response) {
 
 export async function buscarAprovacao(req: Request<{ id: string }>, res: Response) {
   try {
-    const aprovacao = await prisma.aprovacaoPendente.findUnique({
-      where: { id: req.params.id },
+    const aprovacao = await prisma.aprovacaoPendente.findFirst({
+      where: { id: req.params.id, workspaceId: req.workspaceId! },
     });
     if (!aprovacao) return res.status(404).json({ error: "Aprovação não encontrada" });
     return res.json(aprovacao);
@@ -35,8 +36,8 @@ export async function buscarAprovacao(req: Request<{ id: string }>, res: Respons
 export async function aprovarAlteracao(req: Request<{ id: string }>, res: Response) {
   try {
     const usuario = getUsuario(req);
-    const aprovacao = await prisma.aprovacaoPendente.findUnique({
-      where: { id: req.params.id },
+    const aprovacao = await prisma.aprovacaoPendente.findFirst({
+      where: { id: req.params.id, workspaceId: req.workspaceId! },
     });
 
     if (!aprovacao) return res.status(404).json({ error: "Aprovação não encontrada" });
@@ -62,6 +63,7 @@ export async function aprovarAlteracao(req: Request<{ id: string }>, res: Respon
         dadosAnteriores: anterior,
         dadosNovos: atualizado,
         usuario,
+        workspaceId: req.workspaceId,
       });
     } else if (aprovacao.entidade === "Financeiro") {
       const anterior = await prisma.financeiro.findUnique({ where: { id: aprovacao.entidadeId } });
@@ -80,6 +82,7 @@ export async function aprovarAlteracao(req: Request<{ id: string }>, res: Respon
         dadosAnteriores: anterior,
         dadosNovos: atualizado,
         usuario,
+        workspaceId: req.workspaceId,
       });
     }
 
@@ -103,8 +106,8 @@ export async function rejeitarAlteracao(req: Request<{ id: string }>, res: Respo
     const usuario = getUsuario(req);
     const { motivo } = req.body as { motivo?: string };
 
-    const aprovacao = await prisma.aprovacaoPendente.findUnique({
-      where: { id: req.params.id },
+    const aprovacao = await prisma.aprovacaoPendente.findFirst({
+      where: { id: req.params.id, workspaceId: req.workspaceId! },
     });
 
     if (!aprovacao) return res.status(404).json({ error: "Aprovação não encontrada" });
@@ -128,12 +131,12 @@ export async function rejeitarAlteracao(req: Request<{ id: string }>, res: Respo
   }
 }
 
-export async function dashboardAprovacoes(_req: Request, res: Response) {
+export async function dashboardAprovacoes(req: Request, res: Response) {
   try {
     const [pendentes, aprovadas, rejeitadas] = await Promise.all([
-      prisma.aprovacaoPendente.count({ where: { status: "PENDENTE" } }),
-      prisma.aprovacaoPendente.count({ where: { status: "APROVADA" } }),
-      prisma.aprovacaoPendente.count({ where: { status: "REJEITADA" } }),
+      prisma.aprovacaoPendente.count({ where: { workspaceId: req.workspaceId!, status: "PENDENTE" } }),
+      prisma.aprovacaoPendente.count({ where: { workspaceId: req.workspaceId!, status: "APROVADA" } }),
+      prisma.aprovacaoPendente.count({ where: { workspaceId: req.workspaceId!, status: "REJEITADA" } }),
     ]);
 
     return res.json({ pendentes, aprovadas, rejeitadas });

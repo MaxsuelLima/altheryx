@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
 import { StatusProcuracao, TipoProcuracao } from "@prisma/client";
-import { registrarAuditoria, getUsuario } from "../lib/auditService";
+import { registrarAuditoria, getUsuario, getWorkspaceId } from "../lib/auditService";
 
 type IdParam = Request<{ id: string }>;
 
@@ -30,6 +30,7 @@ export async function listarProcuracoes(req: Request, res: Response) {
     const procuracoes = await prisma.procuracao.findMany({
       where: {
         deletadoEm: null,
+        workspaceId: req.workspaceId!,
         ...(busca && {
           OR: [
             { outorgante: { contains: busca, mode: "insensitive" } },
@@ -53,8 +54,8 @@ export async function listarProcuracoes(req: Request, res: Response) {
 
 export async function buscarProcuracao(req: IdParam, res: Response) {
   try {
-    const procuracao = await prisma.procuracao.findUnique({
-      where: { id: req.params.id },
+    const procuracao = await prisma.procuracao.findFirst({
+      where: { id: req.params.id, workspaceId: req.workspaceId! },
       include: { processo: { select: { id: true, numeroProcesso: true } } },
     });
     if (!procuracao || procuracao.deletadoEm) return res.status(404).json({ error: "Procuração não encontrada" });
@@ -72,6 +73,7 @@ export async function criarProcuracao(req: Request, res: Response) {
         ...dados,
         tipoProcuracao: (dados.tipoProcuracao as TipoProcuracao) || "OUTORGADA",
         status: (dados.status as StatusProcuracao) || "VIGENTE",
+        workspaceId: req.workspaceId!,
       },
       include: { processo: { select: { id: true, numeroProcesso: true } } },
     });
@@ -82,6 +84,7 @@ export async function criarProcuracao(req: Request, res: Response) {
       acao: "CRIACAO",
       dadosNovos: procuracao,
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.status(201).json(procuracao);
@@ -96,7 +99,7 @@ export async function criarProcuracao(req: Request, res: Response) {
 export async function atualizarProcuracao(req: IdParam, res: Response) {
   try {
     const dados = procuracaoSchema.partial().parse(req.body);
-    const anterior = await prisma.procuracao.findUnique({ where: { id: req.params.id } });
+    const anterior = await prisma.procuracao.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     const procuracao = await prisma.procuracao.update({
       where: { id: req.params.id },
@@ -115,6 +118,7 @@ export async function atualizarProcuracao(req: IdParam, res: Response) {
       dadosAnteriores: anterior,
       dadosNovos: procuracao,
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.json(procuracao);
@@ -129,7 +133,7 @@ export async function atualizarProcuracao(req: IdParam, res: Response) {
 export async function excluirProcuracao(req: IdParam, res: Response) {
   try {
     const usuario = getUsuario(req);
-    const anterior = await prisma.procuracao.findUnique({ where: { id: req.params.id } });
+    const anterior = await prisma.procuracao.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     await prisma.procuracao.update({
       where: { id: req.params.id },
@@ -142,6 +146,7 @@ export async function excluirProcuracao(req: IdParam, res: Response) {
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario,
+      workspaceId: req.workspaceId,
     });
 
     return res.status(204).send();
@@ -150,7 +155,7 @@ export async function excluirProcuracao(req: IdParam, res: Response) {
   }
 }
 
-export async function alertasRenovacao(_req: Request, res: Response) {
+export async function alertasRenovacao(req: Request, res: Response) {
   try {
     const hoje = new Date();
     const em30dias = new Date();
@@ -159,6 +164,7 @@ export async function alertasRenovacao(_req: Request, res: Response) {
     const alertas = await prisma.procuracao.findMany({
       where: {
         deletadoEm: null,
+        workspaceId: req.workspaceId!,
         status: "VIGENTE",
         dataValidade: { not: null, lte: em30dias },
       },

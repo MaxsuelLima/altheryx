@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
-import { registrarAuditoria, getUsuario } from "../lib/auditService";
+import { registrarAuditoria, getUsuario, getWorkspaceId } from "../lib/auditService";
 
 const prepostoSchema = z.object({
   nome: z.string().min(2),
@@ -21,6 +21,7 @@ export async function listarPrepostos(req: Request, res: Response) {
     const prepostos = await prisma.preposto.findMany({
       where: {
         deletadoEm: null,
+        workspaceId: req.workspaceId!,
         ...(busca && {
           OR: [
             { nome: { contains: busca, mode: "insensitive" } },
@@ -43,8 +44,8 @@ export async function listarPrepostos(req: Request, res: Response) {
 
 export async function buscarPreposto(req: IdParam, res: Response) {
   try {
-    const preposto = await prisma.preposto.findUnique({
-      where: { id: req.params.id },
+    const preposto = await prisma.preposto.findFirst({
+      where: { id: req.params.id, workspaceId: req.workspaceId! },
       include: {
         processos: { include: { processo: { select: { id: true, numeroProcesso: true, assunto: true } } } },
       },
@@ -60,7 +61,7 @@ export async function buscarPreposto(req: IdParam, res: Response) {
 export async function criarPreposto(req: Request, res: Response) {
   try {
     const dados = prepostoSchema.parse(req.body);
-    const preposto = await prisma.preposto.create({ data: dados });
+    const preposto = await prisma.preposto.create({ data: { ...dados, workspaceId: req.workspaceId! } });
 
     await registrarAuditoria({
       entidade: "Preposto",
@@ -68,6 +69,7 @@ export async function criarPreposto(req: Request, res: Response) {
       acao: "CRIACAO",
       dadosNovos: preposto,
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.status(201).json(preposto);
@@ -82,7 +84,7 @@ export async function criarPreposto(req: Request, res: Response) {
 export async function atualizarPreposto(req: IdParam, res: Response) {
   try {
     const dados = prepostoSchema.partial().parse(req.body);
-    const anterior = await prisma.preposto.findUnique({ where: { id: req.params.id } });
+    const anterior = await prisma.preposto.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     const preposto = await prisma.preposto.update({
       where: { id: req.params.id },
@@ -96,6 +98,7 @@ export async function atualizarPreposto(req: IdParam, res: Response) {
       dadosAnteriores: anterior,
       dadosNovos: preposto,
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.json(preposto);
@@ -110,7 +113,7 @@ export async function atualizarPreposto(req: IdParam, res: Response) {
 export async function excluirPreposto(req: IdParam, res: Response) {
   try {
     const usuario = getUsuario(req);
-    const anterior = await prisma.preposto.findUnique({ where: { id: req.params.id } });
+    const anterior = await prisma.preposto.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     await prisma.preposto.update({
       where: { id: req.params.id },
@@ -123,6 +126,7 @@ export async function excluirPreposto(req: IdParam, res: Response) {
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario,
+      workspaceId: req.workspaceId,
     });
 
     return res.status(204).send();

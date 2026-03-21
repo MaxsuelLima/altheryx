@@ -27,8 +27,8 @@ const parcelaSchema = z.object({
 
 export async function buscarFinanceiro(req: IdParam, res: Response) {
   try {
-    let financeiro = await prisma.financeiro.findUnique({
-      where: { processoId: req.params.id },
+    let financeiro = await prisma.financeiro.findFirst({
+      where: { processoId: req.params.id, workspaceId: req.workspaceId! },
       include: {
         parcelas: { where: { deletadoEm: null }, orderBy: { numero: "asc" } },
         processo: {
@@ -39,7 +39,7 @@ export async function buscarFinanceiro(req: IdParam, res: Response) {
 
     if (!financeiro) {
       financeiro = await prisma.financeiro.create({
-        data: { processoId: req.params.id },
+        data: { processoId: req.params.id, workspaceId: req.workspaceId! },
         include: {
           parcelas: { where: { deletadoEm: null }, orderBy: { numero: "asc" } },
           processo: {
@@ -60,7 +60,7 @@ export async function atualizarFinanceiro(req: IdParam, res: Response) {
     const dados = financeiroSchema.parse(req.body);
     const usuario = getUsuario(req);
 
-    const anterior = await prisma.financeiro.findUnique({ where: { processoId: req.params.id } });
+    const anterior = await prisma.financeiro.findFirst({ where: { processoId: req.params.id, workspaceId: req.workspaceId! } });
 
     if (anterior && ENTIDADES_SENSIVEIS.includes("Financeiro")) {
       const aprovacao = await criarAprovacao({
@@ -69,6 +69,7 @@ export async function atualizarFinanceiro(req: IdParam, res: Response) {
         dadosAtuais: anterior,
         dadosPropostos: dados,
         solicitadoPor: usuario,
+        workspaceId: req.workspaceId,
       });
       return res.status(202).json({
         message: "Alteração enviada para aprovação",
@@ -80,6 +81,7 @@ export async function atualizarFinanceiro(req: IdParam, res: Response) {
       where: { processoId: req.params.id },
       create: {
         processoId: req.params.id,
+        workspaceId: req.workspaceId!,
         ...dados,
         prognostico: (dados.prognostico as Prognostico) || "POSSIVEL",
         formaPagamento: (dados.formaPagamento as FormaPagamento) || "A_VISTA",
@@ -101,6 +103,7 @@ export async function atualizarFinanceiro(req: IdParam, res: Response) {
       dadosAnteriores: anterior,
       dadosNovos: financeiro,
       usuario,
+      workspaceId: req.workspaceId,
     });
 
     return res.json(financeiro);
@@ -116,8 +119,8 @@ export async function adicionarParcela(req: IdParam, res: Response) {
   try {
     const dados = parcelaSchema.parse(req.body);
 
-    const financeiro = await prisma.financeiro.findUnique({
-      where: { processoId: req.params.id },
+    const financeiro = await prisma.financeiro.findFirst({
+      where: { processoId: req.params.id, workspaceId: req.workspaceId! },
     });
 
     if (!financeiro) {
@@ -127,6 +130,7 @@ export async function adicionarParcela(req: IdParam, res: Response) {
     const parcela = await prisma.parcela.create({
       data: {
         financeiroId: financeiro.id,
+        workspaceId: req.workspaceId!,
         ...dados,
         status: (dados.status as StatusParcela) || "PENDENTE",
       },
@@ -138,6 +142,7 @@ export async function adicionarParcela(req: IdParam, res: Response) {
       acao: "CRIACAO",
       dadosNovos: parcela,
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.status(201).json(parcela);
@@ -155,7 +160,7 @@ export async function atualizarParcela(
 ) {
   try {
     const dados = parcelaSchema.partial().parse(req.body);
-    const anterior = await prisma.parcela.findUnique({ where: { id: req.params.parcelaId } });
+    const anterior = await prisma.parcela.findFirst({ where: { id: req.params.parcelaId, workspaceId: req.workspaceId! } });
 
     const parcela = await prisma.parcela.update({
       where: { id: req.params.parcelaId },
@@ -172,6 +177,7 @@ export async function atualizarParcela(
       dadosAnteriores: anterior,
       dadosNovos: parcela,
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.json(parcela);
@@ -189,7 +195,7 @@ export async function excluirParcela(
 ) {
   try {
     const usuario = getUsuario(req);
-    const anterior = await prisma.parcela.findUnique({ where: { id: req.params.parcelaId } });
+    const anterior = await prisma.parcela.findFirst({ where: { id: req.params.parcelaId, workspaceId: req.workspaceId! } });
 
     await prisma.parcela.update({
       where: { id: req.params.parcelaId },
@@ -202,6 +208,7 @@ export async function excluirParcela(
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario,
+      workspaceId: req.workspaceId,
     });
 
     return res.status(204).send();

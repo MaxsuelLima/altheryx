@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
-import { registrarAuditoria, getUsuario } from "../lib/auditService";
+import { registrarAuditoria, getUsuario, getWorkspaceId } from "../lib/auditService";
 
 const advogadoSchema = z.object({
   nome: z.string().min(2),
@@ -22,6 +22,7 @@ export async function listarAdvogados(req: Request, res: Response) {
     const advogados = await prisma.advogado.findMany({
       where: {
         deletadoEm: null,
+        workspaceId: req.workspaceId!,
         ...(busca && {
           OR: [
             { nome: { contains: busca, mode: "insensitive" } },
@@ -41,8 +42,8 @@ export async function listarAdvogados(req: Request, res: Response) {
 
 export async function buscarAdvogado(req: IdParam, res: Response) {
   try {
-    const advogado = await prisma.advogado.findUnique({
-      where: { id: req.params.id },
+    const advogado = await prisma.advogado.findFirst({
+      where: { id: req.params.id, workspaceId: req.workspaceId! },
       include: {
         escritorio: true,
         processos: { select: { id: true, numeroProcesso: true, status: true } },
@@ -60,7 +61,7 @@ export async function criarAdvogado(req: Request, res: Response) {
   try {
     const dados = advogadoSchema.parse(req.body);
     const advogado = await prisma.advogado.create({
-      data: dados,
+      data: { ...dados, workspaceId: req.workspaceId! },
       include: { escritorio: { select: { id: true, nome: true } } },
     });
 
@@ -70,6 +71,7 @@ export async function criarAdvogado(req: Request, res: Response) {
       acao: "CRIACAO",
       dadosNovos: advogado,
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.status(201).json(advogado);
@@ -84,7 +86,7 @@ export async function criarAdvogado(req: Request, res: Response) {
 export async function atualizarAdvogado(req: IdParam, res: Response) {
   try {
     const dados = advogadoSchema.partial().parse(req.body);
-    const anterior = await prisma.advogado.findUnique({ where: { id: req.params.id } });
+    const anterior = await prisma.advogado.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     const advogado = await prisma.advogado.update({
       where: { id: req.params.id },
@@ -99,6 +101,7 @@ export async function atualizarAdvogado(req: IdParam, res: Response) {
       dadosAnteriores: anterior,
       dadosNovos: advogado,
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.json(advogado);
@@ -113,7 +116,7 @@ export async function atualizarAdvogado(req: IdParam, res: Response) {
 export async function excluirAdvogado(req: IdParam, res: Response) {
   try {
     const usuario = getUsuario(req);
-    const anterior = await prisma.advogado.findUnique({ where: { id: req.params.id } });
+    const anterior = await prisma.advogado.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     await prisma.advogado.update({
       where: { id: req.params.id },
@@ -126,6 +129,7 @@ export async function excluirAdvogado(req: IdParam, res: Response) {
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario,
+      workspaceId: req.workspaceId,
     });
 
     return res.status(204).send();

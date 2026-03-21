@@ -30,6 +30,7 @@ export async function listarProcessos(req: Request, res: Response) {
 
     const processos = await prisma.processo.findMany({
       where: {
+        workspaceId: req.workspaceId!,
         deletadoEm: null,
         ...(busca && {
           OR: [
@@ -57,8 +58,8 @@ export async function listarProcessos(req: Request, res: Response) {
 
 export async function buscarProcesso(req: IdParam, res: Response) {
   try {
-    const processo = await prisma.processo.findUnique({
-      where: { id: req.params.id },
+    const processo = await prisma.processo.findFirst({
+      where: { id: req.params.id, workspaceId: req.workspaceId! },
       include: {
         advogado: true,
         juiz: true,
@@ -83,6 +84,7 @@ export async function criarProcesso(req: Request, res: Response) {
     const processo = await prisma.processo.create({
       data: {
         ...dados,
+        workspaceId: req.workspaceId!,
         valorCausa: dados.valorCausa ?? undefined,
         fase: (dados.fase as FaseProcessual) || "CONHECIMENTO",
       },
@@ -94,6 +96,7 @@ export async function criarProcesso(req: Request, res: Response) {
       acao: "CRIACAO",
       dadosNovos: processo,
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.status(201).json(processo);
@@ -109,7 +112,7 @@ export async function atualizarProcesso(req: IdParam, res: Response) {
   try {
     const dados = processoSchema.partial().parse(req.body);
     const usuario = getUsuario(req);
-    const anterior = await prisma.processo.findUnique({ where: { id: req.params.id } });
+    const anterior = await prisma.processo.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     if (!anterior) return res.status(404).json({ error: "Processo não encontrado" });
 
@@ -120,6 +123,7 @@ export async function atualizarProcesso(req: IdParam, res: Response) {
         dadosAtuais: anterior,
         dadosPropostos: dados,
         solicitadoPor: usuario,
+        workspaceId: req.workspaceId,
       });
       return res.status(202).json({
         message: "Alteração enviada para aprovação",
@@ -143,6 +147,7 @@ export async function atualizarProcesso(req: IdParam, res: Response) {
       dadosAnteriores: anterior,
       dadosNovos: processo,
       usuario,
+      workspaceId: req.workspaceId,
     });
 
     return res.json(processo);
@@ -157,7 +162,7 @@ export async function atualizarProcesso(req: IdParam, res: Response) {
 export async function excluirProcesso(req: IdParam, res: Response) {
   try {
     const usuario = getUsuario(req);
-    const anterior = await prisma.processo.findUnique({ where: { id: req.params.id } });
+    const anterior = await prisma.processo.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     await prisma.processo.update({
       where: { id: req.params.id },
@@ -170,6 +175,7 @@ export async function excluirProcesso(req: IdParam, res: Response) {
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario,
+      workspaceId: req.workspaceId,
     });
 
     return res.status(204).send();
@@ -189,6 +195,7 @@ export async function adicionarMovimentacao(req: IdParam, res: Response) {
     const movimentacao = await prisma.movimentacao.create({
       data: {
         processoId: req.params.id,
+        workspaceId: req.workspaceId!,
         ...dados,
       },
     });
@@ -208,6 +215,7 @@ export async function adicionarMovimentacao(req: IdParam, res: Response) {
       acao: "CRIACAO",
       dadosNovos: { ...movimentacao, faseDetectada },
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.status(201).json({ ...movimentacao, faseDetectada });
@@ -222,7 +230,7 @@ export async function adicionarMovimentacao(req: IdParam, res: Response) {
 export async function excluirMovimentacao(req: Request<{ id: string; movId: string }>, res: Response) {
   try {
     const usuario = getUsuario(req);
-    const anterior = await prisma.movimentacao.findUnique({ where: { id: req.params.movId } });
+    const anterior = await prisma.movimentacao.findFirst({ where: { id: req.params.movId, workspaceId: req.workspaceId! } });
 
     await prisma.movimentacao.update({
       where: { id: req.params.movId },
@@ -235,6 +243,7 @@ export async function excluirMovimentacao(req: Request<{ id: string; movId: stri
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario,
+      workspaceId: req.workspaceId,
     });
 
     return res.status(204).send();
@@ -327,10 +336,10 @@ export async function removerPreposto(req: Request<{ id: string; prepostoId: str
   }
 }
 
-export async function duracaoMedia(_req: Request, res: Response) {
+export async function duracaoMedia(req: Request, res: Response) {
   try {
     const encerrados = await prisma.processo.findMany({
-      where: { deletadoEm: null, status: "ENCERRADO" },
+      where: { workspaceId: req.workspaceId!, deletadoEm: null, status: "ENCERRADO" },
       select: { competencia: true, comarca: true, criadoEm: true, atualizadoEm: true },
     });
 

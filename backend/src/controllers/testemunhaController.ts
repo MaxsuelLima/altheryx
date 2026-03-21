@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
-import { registrarAuditoria, getUsuario } from "../lib/auditService";
+import { registrarAuditoria, getUsuario, getWorkspaceId } from "../lib/auditService";
 
 const testemunhaSchema = z.object({
   nome: z.string().min(2),
@@ -21,6 +21,7 @@ export async function listarTestemunhas(req: Request, res: Response) {
     const testemunhas = await prisma.testemunha.findMany({
       where: {
         deletadoEm: null,
+        workspaceId: req.workspaceId!,
         ...(busca && {
           OR: [
             { nome: { contains: busca, mode: "insensitive" } },
@@ -39,8 +40,8 @@ export async function listarTestemunhas(req: Request, res: Response) {
 
 export async function buscarTestemunha(req: IdParam, res: Response) {
   try {
-    const testemunha = await prisma.testemunha.findUnique({
-      where: { id: req.params.id },
+    const testemunha = await prisma.testemunha.findFirst({
+      where: { id: req.params.id, workspaceId: req.workspaceId! },
       include: {
         processos: { include: { processo: { select: { id: true, numeroProcesso: true } } } },
       },
@@ -56,7 +57,7 @@ export async function buscarTestemunha(req: IdParam, res: Response) {
 export async function criarTestemunha(req: Request, res: Response) {
   try {
     const dados = testemunhaSchema.parse(req.body);
-    const testemunha = await prisma.testemunha.create({ data: dados });
+    const testemunha = await prisma.testemunha.create({ data: { ...dados, workspaceId: req.workspaceId! } });
 
     await registrarAuditoria({
       entidade: "Testemunha",
@@ -64,6 +65,7 @@ export async function criarTestemunha(req: Request, res: Response) {
       acao: "CRIACAO",
       dadosNovos: testemunha,
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.status(201).json(testemunha);
@@ -78,7 +80,7 @@ export async function criarTestemunha(req: Request, res: Response) {
 export async function atualizarTestemunha(req: IdParam, res: Response) {
   try {
     const dados = testemunhaSchema.partial().parse(req.body);
-    const anterior = await prisma.testemunha.findUnique({ where: { id: req.params.id } });
+    const anterior = await prisma.testemunha.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     const testemunha = await prisma.testemunha.update({
       where: { id: req.params.id },
@@ -92,6 +94,7 @@ export async function atualizarTestemunha(req: IdParam, res: Response) {
       dadosAnteriores: anterior,
       dadosNovos: testemunha,
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.json(testemunha);
@@ -106,7 +109,7 @@ export async function atualizarTestemunha(req: IdParam, res: Response) {
 export async function excluirTestemunha(req: IdParam, res: Response) {
   try {
     const usuario = getUsuario(req);
-    const anterior = await prisma.testemunha.findUnique({ where: { id: req.params.id } });
+    const anterior = await prisma.testemunha.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     await prisma.testemunha.update({
       where: { id: req.params.id },
@@ -119,6 +122,7 @@ export async function excluirTestemunha(req: IdParam, res: Response) {
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario,
+      workspaceId: req.workspaceId,
     });
 
     return res.status(204).send();

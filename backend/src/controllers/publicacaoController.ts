@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
-import { registrarAuditoria, getUsuario } from "../lib/auditService";
+import { registrarAuditoria, getUsuario, getWorkspaceId } from "../lib/auditService";
 
 type IdParam = Request<{ id: string }>;
 
@@ -21,6 +21,7 @@ export async function listarPublicacoes(req: Request, res: Response) {
     const publicacoes = await prisma.publicacao.findMany({
       where: {
         deletadoEm: null,
+        workspaceId: req.workspaceId!,
         ...(busca && {
           OR: [
             { palavraChave: { contains: busca, mode: "insensitive" } },
@@ -46,7 +47,7 @@ export async function criarPublicacao(req: Request, res: Response) {
   try {
     const dados = publicacaoSchema.parse(req.body);
     const publicacao = await prisma.publicacao.create({
-      data: dados,
+      data: { ...dados, workspaceId: req.workspaceId! },
       include: { processo: { select: { id: true, numeroProcesso: true } } },
     });
 
@@ -56,6 +57,7 @@ export async function criarPublicacao(req: Request, res: Response) {
       acao: "CRIACAO",
       dadosNovos: publicacao,
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.status(201).json(publicacao);
@@ -70,7 +72,7 @@ export async function criarPublicacao(req: Request, res: Response) {
 export async function atualizarPublicacao(req: IdParam, res: Response) {
   try {
     const dados = publicacaoSchema.partial().parse(req.body);
-    const anterior = await prisma.publicacao.findUnique({ where: { id: req.params.id } });
+    const anterior = await prisma.publicacao.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     const publicacao = await prisma.publicacao.update({
       where: { id: req.params.id },
@@ -84,6 +86,7 @@ export async function atualizarPublicacao(req: IdParam, res: Response) {
       dadosAnteriores: anterior,
       dadosNovos: publicacao,
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.json(publicacao);
@@ -97,6 +100,9 @@ export async function atualizarPublicacao(req: IdParam, res: Response) {
 
 export async function marcarLida(req: IdParam, res: Response) {
   try {
+    const anterior = await prisma.publicacao.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
+    if (!anterior) return res.status(404).json({ error: "Publicação não encontrada" });
+
     const publicacao = await prisma.publicacao.update({
       where: { id: req.params.id },
       data: { lida: true },
@@ -110,7 +116,7 @@ export async function marcarLida(req: IdParam, res: Response) {
 export async function excluirPublicacao(req: IdParam, res: Response) {
   try {
     const usuario = getUsuario(req);
-    const anterior = await prisma.publicacao.findUnique({ where: { id: req.params.id } });
+    const anterior = await prisma.publicacao.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     await prisma.publicacao.update({
       where: { id: req.params.id },
@@ -123,6 +129,7 @@ export async function excluirPublicacao(req: IdParam, res: Response) {
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario,
+      workspaceId: req.workspaceId,
     });
 
     return res.status(204).send();
@@ -141,6 +148,7 @@ export async function buscarPorPalavraChave(req: Request, res: Response) {
     const resultados = await prisma.publicacao.findMany({
       where: {
         deletadoEm: null,
+        workspaceId: req.workspaceId!,
         OR: [
           { palavraChave: { contains: palavra, mode: "insensitive" } },
           { conteudo: { contains: palavra, mode: "insensitive" } },

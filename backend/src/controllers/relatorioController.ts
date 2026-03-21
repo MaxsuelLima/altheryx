@@ -13,6 +13,7 @@ export async function relatorioProcessos(req: Request, res: Response) {
 
     const processos = await prisma.processo.findMany({
       where: {
+        workspaceId: req.workspaceId!,
         deletadoEm: null,
         ...(status && { status: status as StatusProcesso }),
         ...(tribunal && { tribunal: { contains: tribunal, mode: "insensitive" as const } }),
@@ -50,6 +51,7 @@ export async function relatorioClientes(req: Request, res: Response) {
 
     const clientes = await prisma.cliente.findMany({
       where: {
+        workspaceId: req.workspaceId!,
         deletadoEm: null,
         ...(ativo !== undefined && { ativo: ativo === "true" }),
         ...(estado && { estado }),
@@ -82,6 +84,7 @@ export async function relatorioFinanceiro(req: Request, res: Response) {
 
     const financeiros = await prisma.financeiro.findMany({
       where: {
+        workspaceId: req.workspaceId!,
         deletadoEm: null,
         ...(prognostico && { prognostico: prognostico as Prognostico }),
       },
@@ -146,6 +149,7 @@ export async function relatorioPrazos(req: Request, res: Response) {
 
     const prazos = await prisma.prazo.findMany({
       where: {
+        workspaceId: req.workspaceId!,
         deletadoEm: null,
         ...(status && { status: status as StatusPrazo }),
         ...(tipo && { tipo: tipo as never }),
@@ -187,6 +191,7 @@ export async function relatorioProcuracoes(req: Request, res: Response) {
 
     const procuracoes = await prisma.procuracao.findMany({
       where: {
+        workspaceId: req.workspaceId!,
         deletadoEm: null,
         ...(status && !vencendo && { status: status as never }),
         ...dateFilter,
@@ -212,6 +217,7 @@ export async function relatorioRequisicoes(req: Request, res: Response) {
 
     const requisicoes = await prisma.requisicao.findMany({
       where: {
+        workspaceId: req.workspaceId!,
         deletadoEm: null,
         ...(status && { status: status as StatusRequisicao }),
         ...(area && { area: area as never }),
@@ -232,30 +238,30 @@ export async function relatorioRequisicoes(req: Request, res: Response) {
   }
 }
 
-export async function relatorioFiltros(_req: Request, res: Response) {
+export async function relatorioFiltros(req: Request, res: Response) {
   try {
     const [tribunais, competencias, advogados, estados] = await Promise.all([
       prisma.processo.findMany({
         select: { tribunal: true },
         distinct: ["tribunal"],
-        where: { deletadoEm: null },
+        where: { workspaceId: req.workspaceId!, deletadoEm: null },
         orderBy: { tribunal: "asc" },
       }),
       prisma.processo.findMany({
         select: { competencia: true },
         distinct: ["competencia"],
-        where: { competencia: { not: null }, deletadoEm: null },
+        where: { workspaceId: req.workspaceId!, competencia: { not: null }, deletadoEm: null },
         orderBy: { competencia: "asc" },
       }),
       prisma.advogado.findMany({
         select: { id: true, nome: true, oab: true },
-        where: { ativo: true, deletadoEm: null },
+        where: { workspaceId: req.workspaceId!, ativo: true, deletadoEm: null },
         orderBy: { nome: "asc" },
       }),
       prisma.cliente.findMany({
         select: { estado: true },
         distinct: ["estado"],
-        where: { estado: { not: null }, deletadoEm: null },
+        where: { workspaceId: req.workspaceId!, estado: { not: null }, deletadoEm: null },
         orderBy: { estado: "asc" },
       }),
     ]);

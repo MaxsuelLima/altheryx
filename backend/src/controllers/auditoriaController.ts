@@ -14,6 +14,7 @@ export async function listarAuditorias(req: Request, res: Response) {
 
     const logs = await prisma.auditLog.findMany({
       where: {
+        workspaceId: req.workspaceId!,
         ...(entidade && { entidade }),
         ...(entidadeId && { entidadeId }),
         ...(acao && { acao: acao as AcaoAuditoria }),
@@ -38,8 +39,8 @@ export async function listarAuditorias(req: Request, res: Response) {
 
 export async function buscarAuditoria(req: Request<{ id: string }>, res: Response) {
   try {
-    const log = await prisma.auditLog.findUnique({
-      where: { id: req.params.id },
+    const log = await prisma.auditLog.findFirst({
+      where: { id: req.params.id, workspaceId: req.workspaceId! },
     });
     if (!log) return res.status(404).json({ error: "Log não encontrado" });
     return res.json(log);
@@ -52,6 +53,7 @@ export async function historicoEntidade(req: Request<{ entidade: string; entidad
   try {
     const logs = await prisma.auditLog.findMany({
       where: {
+        workspaceId: req.workspaceId!,
         entidade: req.params.entidade,
         entidadeId: req.params.entidadeId,
       },

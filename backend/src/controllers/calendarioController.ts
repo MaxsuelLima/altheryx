@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
-import { registrarAuditoria, getUsuario } from "../lib/auditService";
+import { registrarAuditoria, getUsuario, getWorkspaceId } from "../lib/auditService";
 
 type IdParam = Request<{ id: string }>;
 
@@ -35,6 +35,7 @@ export async function listarEventos(req: Request, res: Response) {
     const eventos = await prisma.calendarioTribunal.findMany({
       where: {
         deletadoEm: null,
+        workspaceId: req.workspaceId!,
         ...(tribunal && { tribunal: { contains: tribunal, mode: "insensitive" as const } }),
         ...dateFilter,
       },
@@ -50,7 +51,7 @@ export async function listarEventos(req: Request, res: Response) {
 export async function criarEvento(req: Request, res: Response) {
   try {
     const dados = calendarioSchema.parse(req.body);
-    const evento = await prisma.calendarioTribunal.create({ data: dados });
+    const evento = await prisma.calendarioTribunal.create({ data: { ...dados, workspaceId: req.workspaceId! } });
 
     await registrarAuditoria({
       entidade: "CalendarioTribunal",
@@ -58,6 +59,7 @@ export async function criarEvento(req: Request, res: Response) {
       acao: "CRIACAO",
       dadosNovos: evento,
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.status(201).json(evento);
@@ -72,7 +74,7 @@ export async function criarEvento(req: Request, res: Response) {
 export async function atualizarEvento(req: IdParam, res: Response) {
   try {
     const dados = calendarioSchema.partial().parse(req.body);
-    const anterior = await prisma.calendarioTribunal.findUnique({ where: { id: req.params.id } });
+    const anterior = await prisma.calendarioTribunal.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     const evento = await prisma.calendarioTribunal.update({
       where: { id: req.params.id },
@@ -86,6 +88,7 @@ export async function atualizarEvento(req: IdParam, res: Response) {
       dadosAnteriores: anterior,
       dadosNovos: evento,
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.json(evento);
@@ -100,7 +103,7 @@ export async function atualizarEvento(req: IdParam, res: Response) {
 export async function excluirEvento(req: IdParam, res: Response) {
   try {
     const usuario = getUsuario(req);
-    const anterior = await prisma.calendarioTribunal.findUnique({ where: { id: req.params.id } });
+    const anterior = await prisma.calendarioTribunal.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     await prisma.calendarioTribunal.update({
       where: { id: req.params.id },
@@ -113,6 +116,7 @@ export async function excluirEvento(req: IdParam, res: Response) {
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario,
+      workspaceId: req.workspaceId,
     });
 
     return res.status(204).send();
@@ -121,12 +125,12 @@ export async function excluirEvento(req: IdParam, res: Response) {
   }
 }
 
-export async function listarTribunais(_req: Request, res: Response) {
+export async function listarTribunais(req: Request, res: Response) {
   try {
     const tribunais = await prisma.calendarioTribunal.findMany({
       select: { tribunal: true },
       distinct: ["tribunal"],
-      where: { deletadoEm: null },
+      where: { deletadoEm: null, workspaceId: req.workspaceId! },
       orderBy: { tribunal: "asc" },
     });
     return res.json(tribunais.map((t) => t.tribunal));

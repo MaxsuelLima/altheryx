@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
-import { registrarAuditoria, getUsuario } from "../lib/auditService";
+import { registrarAuditoria, getUsuario, getWorkspaceId } from "../lib/auditService";
 
 const escritorioSchema = z.object({
   nome: z.string().min(2),
@@ -24,6 +24,7 @@ export async function listarEscritorios(req: Request, res: Response) {
     const escritorios = await prisma.escritorio.findMany({
       where: {
         deletadoEm: null,
+        workspaceId: req.workspaceId!,
         ...(busca && {
           OR: [
             { nome: { contains: busca, mode: "insensitive" } },
@@ -43,8 +44,8 @@ export async function listarEscritorios(req: Request, res: Response) {
 
 export async function buscarEscritorio(req: IdParam, res: Response) {
   try {
-    const escritorio = await prisma.escritorio.findUnique({
-      where: { id: req.params.id },
+    const escritorio = await prisma.escritorio.findFirst({
+      where: { id: req.params.id, workspaceId: req.workspaceId! },
       include: { advogados: true },
     });
 
@@ -58,7 +59,7 @@ export async function buscarEscritorio(req: IdParam, res: Response) {
 export async function criarEscritorio(req: Request, res: Response) {
   try {
     const dados = escritorioSchema.parse(req.body);
-    const escritorio = await prisma.escritorio.create({ data: dados });
+    const escritorio = await prisma.escritorio.create({ data: { ...dados, workspaceId: req.workspaceId! } });
 
     await registrarAuditoria({
       entidade: "Escritorio",
@@ -66,6 +67,7 @@ export async function criarEscritorio(req: Request, res: Response) {
       acao: "CRIACAO",
       dadosNovos: escritorio,
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.status(201).json(escritorio);
@@ -80,7 +82,7 @@ export async function criarEscritorio(req: Request, res: Response) {
 export async function atualizarEscritorio(req: IdParam, res: Response) {
   try {
     const dados = escritorioSchema.partial().parse(req.body);
-    const anterior = await prisma.escritorio.findUnique({ where: { id: req.params.id } });
+    const anterior = await prisma.escritorio.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     const escritorio = await prisma.escritorio.update({
       where: { id: req.params.id },
@@ -94,6 +96,7 @@ export async function atualizarEscritorio(req: IdParam, res: Response) {
       dadosAnteriores: anterior,
       dadosNovos: escritorio,
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.json(escritorio);
@@ -108,7 +111,7 @@ export async function atualizarEscritorio(req: IdParam, res: Response) {
 export async function excluirEscritorio(req: IdParam, res: Response) {
   try {
     const usuario = getUsuario(req);
-    const anterior = await prisma.escritorio.findUnique({ where: { id: req.params.id } });
+    const anterior = await prisma.escritorio.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     await prisma.escritorio.update({
       where: { id: req.params.id },
@@ -121,6 +124,7 @@ export async function excluirEscritorio(req: IdParam, res: Response) {
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario,
+      workspaceId: req.workspaceId,
     });
 
     return res.status(204).send();

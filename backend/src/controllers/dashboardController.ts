@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 
-export async function getDashboard(_req: Request, res: Response) {
+export async function getDashboard(req: Request, res: Response) {
   try {
     const [
       totalClientes,
@@ -21,38 +21,39 @@ export async function getDashboard(_req: Request, res: Response) {
       prazosProximos,
       procuracoesVencendo,
     ] = await Promise.all([
-      prisma.cliente.count({ where: { ativo: true, deletadoEm: null } }),
-      prisma.advogado.count({ where: { ativo: true, deletadoEm: null } }),
-      prisma.processo.count({ where: { deletadoEm: null } }),
-      prisma.escritorio.count({ where: { ativo: true, deletadoEm: null } }),
-      prisma.juiz.count({ where: { ativo: true, deletadoEm: null } }),
-      prisma.testemunha.count({ where: { deletadoEm: null } }),
-      prisma.perito.count({ where: { deletadoEm: null } }),
-      prisma.preposto.count({ where: { deletadoEm: null } }),
-      prisma.procuracao.count({ where: { deletadoEm: null } }),
-      prisma.requisicao.count({ where: { deletadoEm: null, status: { in: ["ABERTA", "EM_ANALISE", "EM_ANDAMENTO"] } } }),
+      prisma.cliente.count({ where: { workspaceId: req.workspaceId!, ativo: true, deletadoEm: null } }),
+      prisma.advogado.count({ where: { workspaceId: req.workspaceId!, ativo: true, deletadoEm: null } }),
+      prisma.processo.count({ where: { workspaceId: req.workspaceId!, deletadoEm: null } }),
+      prisma.escritorio.count({ where: { workspaceId: req.workspaceId!, ativo: true, deletadoEm: null } }),
+      prisma.juiz.count({ where: { workspaceId: req.workspaceId!, ativo: true, deletadoEm: null } }),
+      prisma.testemunha.count({ where: { workspaceId: req.workspaceId!, deletadoEm: null } }),
+      prisma.perito.count({ where: { workspaceId: req.workspaceId!, deletadoEm: null } }),
+      prisma.preposto.count({ where: { workspaceId: req.workspaceId!, deletadoEm: null } }),
+      prisma.procuracao.count({ where: { workspaceId: req.workspaceId!, deletadoEm: null } }),
+      prisma.requisicao.count({ where: { workspaceId: req.workspaceId!, deletadoEm: null, status: { in: ["ABERTA", "EM_ANALISE", "EM_ANDAMENTO"] } } }),
       prisma.processo.groupBy({
         by: ["status"],
         _count: { id: true },
-        where: { deletadoEm: null },
+        where: { workspaceId: req.workspaceId!, deletadoEm: null },
       }),
       prisma.processo.groupBy({
         by: ["competencia"],
         _count: { id: true },
-        where: { competencia: { not: null }, deletadoEm: null },
+        where: { workspaceId: req.workspaceId!, competencia: { not: null }, deletadoEm: null },
       }),
       prisma.processo.groupBy({
         by: ["tribunal"],
         _count: { id: true },
-        where: { deletadoEm: null },
+        where: { workspaceId: req.workspaceId!, deletadoEm: null },
       }),
       prisma.processo.groupBy({
         by: ["fase"],
         _count: { id: true },
-        where: { fase: { not: null }, deletadoEm: null },
+        where: { workspaceId: req.workspaceId!, fase: { not: null }, deletadoEm: null },
       }),
       prisma.prazo.count({
         where: {
+          workspaceId: req.workspaceId!,
           deletadoEm: null,
           status: "PENDENTE",
           dataFim: { lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
@@ -60,6 +61,7 @@ export async function getDashboard(_req: Request, res: Response) {
       }),
       prisma.procuracao.count({
         where: {
+          workspaceId: req.workspaceId!,
           deletadoEm: null,
           status: "VIGENTE",
           dataValidade: { not: null, lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) },

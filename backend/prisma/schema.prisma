@@ -166,25 +166,63 @@ enum StatusAprovacao {
   REJEITADA
 }
 
+model Workspace {
+  id           String   @id @default(uuid())
+  slug         String   @unique
+  nome         String
+  descricao    String?
+  ativo        Boolean  @default(true)
+  criadoEm     DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+
+  usuarios          Usuario[]
+  clientes          Cliente[]
+  escritorios       Escritorio[]
+  advogados         Advogado[]
+  juizes            Juiz[]
+  testemunhas       Testemunha[]
+  processos         Processo[]
+  financeiros       Financeiro[]
+  parcelas          Parcela[]
+  movimentacoes     Movimentacao[]
+  documentos        Documento[]
+  publicacoes       Publicacao[]
+  prazos            Prazo[]
+  calendarioTribunais CalendarioTribunal[]
+  procuracoes       Procuracao[]
+  requisicoes       Requisicao[]
+  peritos           Perito[]
+  prepostos         Preposto[]
+  auditLogs         AuditLog[]
+  aprovacoesPendentes AprovacaoPendente[]
+
+  @@map("workspaces")
+}
+
 model Usuario {
-  id        String   @id @default(uuid())
-  nome      String
-  email     String   @unique
-  senha     String
-  role      Role     @default(ESTAGIARIO)
-  ativo     Boolean  @default(true)
-  criadoEm  DateTime @default(now()) @map("criado_em")
+  id           String   @id @default(uuid())
+  nome         String
+  email        String
+  senha        String
+  role         Role     @default(ESTAGIARIO)
+  isAdmin      Boolean  @default(false) @map("is_admin")
+  ativo        Boolean  @default(true)
+  workspaceId  String   @map("workspace_id")
+  criadoEm     DateTime @default(now()) @map("criado_em")
   atualizadoEm DateTime @updatedAt @map("atualizado_em")
   deletadoEm   DateTime? @map("deletado_em")
   deletadoPor  String?   @map("deletado_por")
 
+  workspace    Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@unique([workspaceId, email])
   @@map("usuarios")
 }
 
 model Cliente {
   id             String   @id @default(uuid())
   nome           String
-  cpfCnpj        String   @unique @map("cpf_cnpj")
+  cpfCnpj        String   @map("cpf_cnpj")
   email          String?
   telefone       String?
   endereco       String?
@@ -193,20 +231,23 @@ model Cliente {
   cep            String?
   observacoes    String?
   ativo          Boolean  @default(true)
+  workspaceId    String   @map("workspace_id")
   criadoEm       DateTime @default(now()) @map("criado_em")
   atualizadoEm   DateTime @updatedAt @map("atualizado_em")
   deletadoEm     DateTime? @map("deletado_em")
   deletadoPor    String?   @map("deletado_por")
 
+  workspace      Workspace @relation(fields: [workspaceId], references: [id])
   partesProcesso ParteProcesso[]
 
+  @@unique([workspaceId, cpfCnpj])
   @@map("clientes")
 }
 
 model Escritorio {
   id          String   @id @default(uuid())
   nome        String
-  cnpj        String   @unique
+  cnpj        String
   email       String?
   telefone    String?
   endereco    String?
@@ -214,33 +255,39 @@ model Escritorio {
   estado      String?  @db.Char(2)
   cep         String?
   ativo       Boolean  @default(true)
+  workspaceId String   @map("workspace_id")
   criadoEm    DateTime @default(now()) @map("criado_em")
   atualizadoEm DateTime @updatedAt @map("atualizado_em")
   deletadoEm   DateTime? @map("deletado_em")
   deletadoPor  String?   @map("deletado_por")
 
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
   advogados   Advogado[]
 
+  @@unique([workspaceId, cnpj])
   @@map("escritorios")
 }
 
 model Advogado {
   id            String   @id @default(uuid())
   nome          String
-  oab           String   @unique
+  oab           String
   email         String?
   telefone      String?
   especialidade String?
   escritorioId  String?  @map("escritorio_id")
   ativo         Boolean  @default(true)
+  workspaceId   String   @map("workspace_id")
   criadoEm      DateTime @default(now()) @map("criado_em")
   atualizadoEm  DateTime @updatedAt @map("atualizado_em")
   deletadoEm    DateTime? @map("deletado_em")
   deletadoPor   String?   @map("deletado_por")
 
+  workspace     Workspace @relation(fields: [workspaceId], references: [id])
   escritorio    Escritorio? @relation(fields: [escritorioId], references: [id])
   processos     Processo[]
 
+  @@unique([workspaceId, oab])
   @@map("advogados")
 }
 
@@ -251,11 +298,13 @@ model Juiz {
   vara        String?
   email       String?
   ativo       Boolean  @default(true)
+  workspaceId String   @map("workspace_id")
   criadoEm    DateTime @default(now()) @map("criado_em")
   atualizadoEm DateTime @updatedAt @map("atualizado_em")
   deletadoEm   DateTime? @map("deletado_em")
   deletadoPor  String?   @map("deletado_por")
 
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
   processos   Processo[]
 
   @@map("juizes")
@@ -264,25 +313,28 @@ model Juiz {
 model Testemunha {
   id          String   @id @default(uuid())
   nome        String
-  cpf         String?  @unique
+  cpf         String?
   email       String?
   telefone    String?
   endereco    String?
   profissao   String?
+  workspaceId String   @map("workspace_id")
   criadoEm    DateTime @default(now()) @map("criado_em")
   atualizadoEm DateTime @updatedAt @map("atualizado_em")
   deletadoEm   DateTime? @map("deletado_em")
   deletadoPor  String?   @map("deletado_por")
 
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
   processos   ProcessoTestemunha[]
   prazos      PrazoTestemunha[]
 
+  @@unique([workspaceId, cpf])
   @@map("testemunhas")
 }
 
 model Processo {
   id                  String          @id @default(uuid())
-  numeroProcesso      String          @unique @map("numero_processo")
+  numeroProcesso      String          @map("numero_processo")
   status              StatusProcesso  @default(EM_ANDAMENTO)
   tribunal            String
   competencia         String?
@@ -296,11 +348,13 @@ model Processo {
   observacoes         String?
   advogadoId          String?         @map("advogado_id")
   juizId              String?         @map("juiz_id")
+  workspaceId         String          @map("workspace_id")
   criadoEm            DateTime        @default(now()) @map("criado_em")
   atualizadoEm        DateTime        @updatedAt @map("atualizado_em")
   deletadoEm          DateTime?       @map("deletado_em")
   deletadoPor         String?         @map("deletado_por")
 
+  workspace           Workspace       @relation(fields: [workspaceId], references: [id])
   advogado            Advogado?       @relation(fields: [advogadoId], references: [id])
   juiz                Juiz?           @relation(fields: [juizId], references: [id])
   partes              ParteProcesso[]
@@ -314,6 +368,7 @@ model Processo {
   peritos             ProcessoPerito[]
   prepostos           ProcessoPreposto[]
 
+  @@unique([workspaceId, numeroProcesso])
   @@map("processos")
 }
 
@@ -327,11 +382,13 @@ model Financeiro {
   percentualExito     Decimal?        @map("percentual_exito") @db.Decimal(5, 2)
   formaPagamento      FormaPagamento  @default(A_VISTA) @map("forma_pagamento")
   observacoes         String?
+  workspaceId         String          @map("workspace_id")
   criadoEm            DateTime        @default(now()) @map("criado_em")
   atualizadoEm        DateTime        @updatedAt @map("atualizado_em")
   deletadoEm          DateTime?       @map("deletado_em")
   deletadoPor         String?         @map("deletado_por")
 
+  workspace           Workspace       @relation(fields: [workspaceId], references: [id])
   processo            Processo        @relation(fields: [processoId], references: [id], onDelete: Cascade)
   parcelas            Parcela[]
 
@@ -347,11 +404,13 @@ model Parcela {
   dataPagamento   DateTime?      @map("data_pagamento")
   status          StatusParcela  @default(PENDENTE)
   observacoes     String?
+  workspaceId     String         @map("workspace_id")
   criadoEm        DateTime       @default(now()) @map("criado_em")
   atualizadoEm    DateTime       @updatedAt @map("atualizado_em")
   deletadoEm      DateTime?      @map("deletado_em")
   deletadoPor     String?        @map("deletado_por")
 
+  workspace       Workspace      @relation(fields: [workspaceId], references: [id])
   financeiro      Financeiro     @relation(fields: [financeiroId], references: [id], onDelete: Cascade)
 
   @@map("parcelas")
@@ -362,10 +421,12 @@ model Movimentacao {
   processoId  String   @map("processo_id")
   data        DateTime
   descricao   String
+  workspaceId String   @map("workspace_id")
   criadoEm    DateTime @default(now()) @map("criado_em")
   deletadoEm  DateTime? @map("deletado_em")
   deletadoPor String?   @map("deletado_por")
 
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
   processo    Processo @relation(fields: [processoId], references: [id], onDelete: Cascade)
 
   @@map("movimentacoes")
@@ -384,10 +445,12 @@ model Documento {
   documentoPaiId      String?             @map("documento_pai_id")
   descricao           String?
   dataDocumento       DateTime            @map("data_documento")
+  workspaceId         String              @map("workspace_id")
   criadoEm            DateTime            @default(now()) @map("criado_em")
   deletadoEm          DateTime?           @map("deletado_em")
   deletadoPor         String?             @map("deletado_por")
 
+  workspace           Workspace           @relation(fields: [workspaceId], references: [id])
   processo            Processo            @relation(fields: [processoId], references: [id], onDelete: Cascade)
   documentoPai        Documento?          @relation("DocumentoHierarquia", fields: [documentoPaiId], references: [id])
   anexos              Documento[]         @relation("DocumentoHierarquia")
@@ -430,10 +493,12 @@ model Publicacao {
   dataPublicacao  DateTime @map("data_publicacao")
   conteudo        String
   lida            Boolean  @default(false)
+  workspaceId     String   @map("workspace_id")
   criadoEm        DateTime @default(now()) @map("criado_em")
   deletadoEm      DateTime? @map("deletado_em")
   deletadoPor     String?   @map("deletado_por")
 
+  workspace       Workspace @relation(fields: [workspaceId], references: [id])
   processo        Processo? @relation(fields: [processoId], references: [id], onDelete: SetNull)
   prazos          Prazo[]
 
@@ -455,11 +520,13 @@ model Prazo {
   observacoes     String?
   prepostoNome    String?     @map("preposto_nome")
   prepostoContato String?     @map("preposto_contato")
+  workspaceId     String      @map("workspace_id")
   criadoEm        DateTime    @default(now()) @map("criado_em")
   atualizadoEm    DateTime    @updatedAt @map("atualizado_em")
   deletadoEm      DateTime?   @map("deletado_em")
   deletadoPor     String?     @map("deletado_por")
 
+  workspace       Workspace   @relation(fields: [workspaceId], references: [id])
   processo        Processo    @relation(fields: [processoId], references: [id], onDelete: Cascade)
   publicacao      Publicacao? @relation(fields: [publicacaoId], references: [id], onDelete: SetNull)
   testemunhas     PrazoTestemunha[]
@@ -487,9 +554,12 @@ model CalendarioTribunal {
   dataInicio  DateTime @map("data_inicio")
   dataFim     DateTime @map("data_fim")
   tipo        String
+  workspaceId String   @map("workspace_id")
   criadoEm    DateTime @default(now()) @map("criado_em")
   deletadoEm  DateTime? @map("deletado_em")
   deletadoPor String?   @map("deletado_por")
+
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
 
   @@map("calendario_tribunais")
 }
@@ -505,11 +575,13 @@ model Procuracao {
   dataValidade    DateTime?         @map("data_validade")
   status          StatusProcuracao  @default(VIGENTE)
   observacoes     String?
+  workspaceId     String            @map("workspace_id")
   criadoEm        DateTime          @default(now()) @map("criado_em")
   atualizadoEm    DateTime          @updatedAt @map("atualizado_em")
   deletadoEm      DateTime?         @map("deletado_em")
   deletadoPor     String?           @map("deletado_por")
 
+  workspace       Workspace         @relation(fields: [workspaceId], references: [id])
   processo        Processo?         @relation(fields: [processoId], references: [id], onDelete: SetNull)
 
   @@map("procuracoes")
@@ -532,10 +604,13 @@ model Requisicao {
   resposta        String?
   responsavel     String?
   concluidaEm     DateTime?             @map("concluida_em")
+  workspaceId     String                @map("workspace_id")
   criadoEm        DateTime              @default(now()) @map("criado_em")
   atualizadoEm    DateTime              @updatedAt @map("atualizado_em")
   deletadoEm      DateTime?             @map("deletado_em")
   deletadoPor     String?               @map("deletado_por")
+
+  workspace       Workspace             @relation(fields: [workspaceId], references: [id])
 
   @@map("requisicoes")
 }
@@ -543,19 +618,22 @@ model Requisicao {
 model Perito {
   id                String       @id @default(uuid())
   nome              String
-  cpf               String?      @unique
+  cpf               String?
   email             String?
   telefone          String?
   tipo              TipoPerito   @default(PERITO)
   especialidade     String?
   registroProfissional String?   @map("registro_profissional")
+  workspaceId       String       @map("workspace_id")
   criadoEm          DateTime     @default(now()) @map("criado_em")
   atualizadoEm      DateTime     @updatedAt @map("atualizado_em")
   deletadoEm        DateTime?    @map("deletado_em")
   deletadoPor       String?      @map("deletado_por")
 
+  workspace         Workspace    @relation(fields: [workspaceId], references: [id])
   processos         ProcessoPerito[]
 
+  @@unique([workspaceId, cpf])
   @@map("peritos")
 }
 
@@ -575,18 +653,21 @@ model ProcessoPerito {
 model Preposto {
   id          String   @id @default(uuid())
   nome        String
-  cpf         String?  @unique
+  cpf         String?
   email       String?
   telefone    String?
   empresa     String?
   cargo       String?
+  workspaceId String   @map("workspace_id")
   criadoEm    DateTime @default(now()) @map("criado_em")
   atualizadoEm DateTime @updatedAt @map("atualizado_em")
   deletadoEm  DateTime? @map("deletado_em")
   deletadoPor String?   @map("deletado_por")
 
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
   processos   ProcessoPreposto[]
 
+  @@unique([workspaceId, cpf])
   @@map("prepostos")
 }
 
@@ -611,7 +692,10 @@ model AuditLog {
   dadosAnteriores Json?           @map("dados_anteriores")
   dadosNovos      Json?           @map("dados_novos")
   usuario         String
+  workspaceId     String?         @map("workspace_id")
   criadoEm        DateTime        @default(now()) @map("criado_em")
+
+  workspace       Workspace?      @relation(fields: [workspaceId], references: [id])
 
   @@map("audit_logs")
 }
@@ -626,8 +710,11 @@ model AprovacaoPendente {
   solicitadoPor   String          @map("solicitado_por")
   aprovadoPor     String?         @map("aprovado_por")
   motivoRejeicao  String?         @map("motivo_rejeicao")
+  workspaceId     String?         @map("workspace_id")
   criadoEm        DateTime        @default(now()) @map("criado_em")
   resolvidoEm     DateTime?       @map("resolvido_em")
+
+  workspace       Workspace?      @relation(fields: [workspaceId], references: [id])
 
   @@map("aprovacoes_pendentes")
 }

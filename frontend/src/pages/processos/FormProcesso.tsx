@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { api } from "../../lib/api";
+import { useWorkspaceNavigate } from "../../hooks/useWorkspaceNavigate";
 import FormField from "../../components/FormField";
 import CustomCheckbox from "../../components/ui/CustomCheckbox";
 
@@ -37,7 +38,7 @@ interface FormProcessoProps {
 
 export default function FormProcesso({ editId, onClose, onSuccess }: FormProcessoProps = {}) {
   const params = useParams();
-  const navigate = useNavigate();
+  const navigate = useWorkspaceNavigate();
   const id = editId ?? params.id;
   const isModal = !!onClose;
   const [form, setForm] = useState(initialState);
@@ -100,14 +101,14 @@ export default function FormProcesso({ editId, onClose, onSuccess }: FormProcess
         if (isModal) {
           onSuccess?.();
         } else {
-          navigate(`/processos/${id}`);
+          navigate(`processos/${id}`);
         }
       } else {
         const res = await api.post("/processos", payload);
         if (isModal) {
           onSuccess?.();
         } else {
-          navigate(`/processos/${res.data.id}`);
+          navigate(`processos/${res.data.id}`);
         }
       }
     } finally {
@@ -119,7 +120,7 @@ export default function FormProcesso({ editId, onClose, onSuccess }: FormProcess
     if (isModal) {
       onClose?.();
     } else {
-      navigate("/processos");
+      navigate("processos");
     }
   };
 

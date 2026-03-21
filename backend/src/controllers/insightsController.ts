@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { Decimal } from "@prisma/client/runtime/library";
 
-export async function getInsights(_req: Request, res: Response) {
+export async function getInsights(req: Request, res: Response) {
   try {
     const agora = new Date();
     const ha30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
@@ -19,16 +19,16 @@ export async function getInsights(_req: Request, res: Response) {
       processosPorCompetencia,
       processosEncerrados,
     ] = await Promise.all([
-      prisma.cliente.count({ where: { ativo: true, deletadoEm: null } }),
+      prisma.cliente.count({ where: { workspaceId: req.workspaceId!, ativo: true, deletadoEm: null } }),
       prisma.cliente.count({
-        where: { ativo: true, deletadoEm: null, criadoEm: { gte: ha30d } },
+        where: { workspaceId: req.workspaceId!, ativo: true, deletadoEm: null, criadoEm: { gte: ha30d } },
       }),
       prisma.cliente.count({
-        where: { deletadoEm: { not: null, gte: ha30d } },
+        where: { workspaceId: req.workspaceId!, deletadoEm: { not: null, gte: ha30d } },
       }),
-      prisma.processo.count({ where: { deletadoEm: null } }),
+      prisma.processo.count({ where: { workspaceId: req.workspaceId!, deletadoEm: null } }),
       prisma.financeiro.findMany({
-        where: { deletadoEm: null },
+        where: { workspaceId: req.workspaceId!, deletadoEm: null },
         select: {
           honorariosContrato: true,
           honorariosExito: true,
@@ -41,12 +41,12 @@ export async function getInsights(_req: Request, res: Response) {
         },
       }),
       prisma.parcela.aggregate({
-        where: { status: "PAGA", deletadoEm: null },
+        where: { workspaceId: req.workspaceId!, status: "PAGA", deletadoEm: null },
         _sum: { valor: true },
         _count: true,
       }),
       prisma.parcela.aggregate({
-        where: { status: { in: ["PENDENTE", "ATRASADA"] }, deletadoEm: null },
+        where: { workspaceId: req.workspaceId!, status: { in: ["PENDENTE", "ATRASADA"] }, deletadoEm: null },
         _sum: { valor: true },
         _count: true,
       }),
@@ -54,10 +54,10 @@ export async function getInsights(_req: Request, res: Response) {
         by: ["competencia"],
         _count: { id: true },
         _avg: { valorCausa: true },
-        where: { competencia: { not: null }, deletadoEm: null },
+        where: { workspaceId: req.workspaceId!, competencia: { not: null }, deletadoEm: null },
       }),
       prisma.processo.findMany({
-        where: { deletadoEm: null, status: "ENCERRADO" },
+        where: { workspaceId: req.workspaceId!, deletadoEm: null, status: "ENCERRADO" },
         select: { competencia: true, comarca: true, criadoEm: true, atualizadoEm: true },
       }),
     ]);

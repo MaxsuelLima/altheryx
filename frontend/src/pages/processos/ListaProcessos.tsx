@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { api } from "../../lib/api";
+import { useWorkspaceNavigate } from "../../hooks/useWorkspaceNavigate";
 import PageHeader from "../../components/PageHeader";
 import SearchBar from "../../components/SearchBar";
 import DataTable from "../../components/DataTable";
@@ -42,7 +42,7 @@ export default function ListaProcessos() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const navigate = useNavigate();
+  const navigate = useWorkspaceNavigate();
 
   const carregar = () => {
     setLoading(true);
@@ -132,7 +132,7 @@ export default function ListaProcessos() {
             },
           ]}
           data={processos}
-          onEdit={(p) => navigate(`/processos/${p.id}`)}
+          onEdit={(p) => navigate(`processos/${p.id}`)}
           onDelete={excluir}
         />
       )}

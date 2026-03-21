@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
+import { useAuth } from "../contexts/AuthContext";
 import {
   LayoutDashboard,
   FileText,
@@ -24,12 +25,15 @@ import {
   ChevronRight,
   Sun,
   Moon,
+  LogOut,
+  UserCog,
 } from "lucide-react";
 
 interface MenuItem {
   path: string;
   label: string;
   icon: React.ReactNode;
+  adminOnly?: boolean;
 }
 
 interface MenuGroup {
@@ -37,67 +41,72 @@ interface MenuGroup {
   items: MenuItem[];
 }
 
-const menuStructure: (MenuItem | MenuGroup)[] = [
-  { path: "/", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
-  {
-    label: "Gestão Processual",
-    items: [
-      { path: "/processos", label: "Processos", icon: <FileText size={18} /> },
-      { path: "/publicacoes", label: "Publicações", icon: <Newspaper size={18} /> },
-      { path: "/prazos", label: "Prazos", icon: <Clock size={18} /> },
-      { path: "/calendario", label: "Calendário", icon: <CalendarDays size={18} /> },
-    ],
-  },
-  {
-    label: "Pessoas",
-    items: [
-      { path: "/clientes", label: "Clientes", icon: <Users size={18} /> },
-      { path: "/advogados", label: "Advogados", icon: <Scale size={18} /> },
-      { path: "/juizes", label: "Juízes", icon: <Gavel size={18} /> },
-      { path: "/testemunhas", label: "Testemunhas", icon: <MessageSquare size={18} /> },
-      { path: "/peritos", label: "Peritos", icon: <Microscope size={18} /> },
-      { path: "/prepostos", label: "Prepostos", icon: <UserCheck size={18} /> },
-    ],
-  },
-  {
-    label: "Estrutura",
-    items: [
-      { path: "/escritorios", label: "Escritórios", icon: <Building2 size={18} /> },
-    ],
-  },
-  {
-    label: "Documentos",
-    items: [
-      { path: "/procuracoes", label: "Procurações", icon: <ScrollText size={18} /> },
-      { path: "/requisicoes", label: "Requisições", icon: <ClipboardList size={18} /> },
-    ],
-  },
-  {
-    label: "Análises",
-    items: [
-      { path: "/relatorios", label: "Relatórios", icon: <BarChart3 size={18} /> },
-      { path: "/aprovacoes", label: "Aprovações", icon: <CheckCircle2 size={18} /> },
-      { path: "/insights", label: "Insights", icon: <Lightbulb size={18} /> },
-    ],
-  },
-];
+function getMenuStructure(): (MenuItem | MenuGroup)[] {
+  return [
+    { path: "", label: "Dashboard", icon: <LayoutDashboard size={18} /> },
+    {
+      label: "Gestão Processual",
+      items: [
+        { path: "processos", label: "Processos", icon: <FileText size={18} /> },
+        { path: "publicacoes", label: "Publicações", icon: <Newspaper size={18} /> },
+        { path: "prazos", label: "Prazos", icon: <Clock size={18} /> },
+        { path: "calendario", label: "Calendário", icon: <CalendarDays size={18} /> },
+      ],
+    },
+    {
+      label: "Pessoas",
+      items: [
+        { path: "clientes", label: "Clientes", icon: <Users size={18} /> },
+        { path: "advogados", label: "Advogados", icon: <Scale size={18} /> },
+        { path: "juizes", label: "Juízes", icon: <Gavel size={18} /> },
+        { path: "testemunhas", label: "Testemunhas", icon: <MessageSquare size={18} /> },
+        { path: "peritos", label: "Peritos", icon: <Microscope size={18} /> },
+        { path: "prepostos", label: "Prepostos", icon: <UserCheck size={18} /> },
+      ],
+    },
+    {
+      label: "Estrutura",
+      items: [
+        { path: "escritorios", label: "Escritórios", icon: <Building2 size={18} /> },
+      ],
+    },
+    {
+      label: "Documentos",
+      items: [
+        { path: "procuracoes", label: "Procurações", icon: <ScrollText size={18} /> },
+        { path: "requisicoes", label: "Requisições", icon: <ClipboardList size={18} /> },
+      ],
+    },
+    {
+      label: "Análises",
+      items: [
+        { path: "relatorios", label: "Relatórios", icon: <BarChart3 size={18} /> },
+        { path: "aprovacoes", label: "Aprovações", icon: <CheckCircle2 size={18} /> },
+        { path: "insights", label: "Insights", icon: <Lightbulb size={18} /> },
+      ],
+    },
+    {
+      label: "Administração",
+      items: [
+        { path: "usuarios", label: "Usuários", icon: <UserCog size={18} />, adminOnly: true },
+      ],
+    },
+  ];
+}
 
 function isGroup(item: MenuItem | MenuGroup): item is MenuGroup {
   return "items" in item;
 }
 
-function isActiveRoute(pathname: string, itemPath: string) {
-  if (itemPath === "/") return pathname === "/";
-  return pathname === itemPath || pathname.startsWith(itemPath + "/");
-}
-
-function isGroupActive(pathname: string, group: MenuGroup) {
-  return group.items.some((item) => isActiveRoute(pathname, item.path));
-}
-
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { slug } = useParams<{ slug: string }>();
   const { theme, toggleTheme } = useTheme();
+  const { user, workspace, logout } = useAuth();
+
+  const basePath = `/workspace/${slug}`;
+
   const [collapsed, setCollapsed] = useState(() => {
     try { return localStorage.getItem("sidebar-collapsed") === "true"; } catch { return false; }
   });
@@ -107,7 +116,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       if (saved) return JSON.parse(saved);
     } catch {}
     const initial: Record<string, boolean> = {};
-    menuStructure.forEach((item) => {
+    getMenuStructure().forEach((item) => {
       if (isGroup(item)) initial[item.label] = true;
     });
     return initial;
@@ -121,12 +130,33 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     });
   };
 
+  function isActiveRoute(pathname: string, itemPath: string) {
+    const fullPath = itemPath === "" ? basePath : `${basePath}/${itemPath}`;
+    if (itemPath === "") return pathname === basePath || pathname === basePath + "/";
+    return pathname === fullPath || pathname.startsWith(fullPath + "/");
+  }
+
+  function isGroupActive(pathname: string, group: MenuGroup) {
+    return group.items.some((item) => isActiveRoute(pathname, item.path));
+  }
+
+  function handleLogout() {
+    logout();
+    navigate("/");
+  }
+
+  const menuStructure = getMenuStructure();
+
   const renderMenuItem = (item: MenuItem) => {
+    if (item.adminOnly && !user?.isAdmin) return null;
+
+    const fullPath = item.path === "" ? basePath : `${basePath}/${item.path}`;
     const active = isActiveRoute(location.pathname, item.path);
+
     return (
       <Link
         key={item.path}
-        to={item.path}
+        to={fullPath}
         title={collapsed ? item.label : undefined}
         className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all group relative
           ${active
@@ -150,7 +180,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       >
         <div className={`h-14 flex items-center border-b border-theme-sidebar-border ${collapsed ? "justify-center px-2" : "justify-between px-4"}`}>
           {!collapsed && (
-            <span className="text-lg font-bold text-accent tracking-tight">Altheryx</span>
+            <div className="min-w-0">
+              <span className="text-lg font-bold text-accent tracking-tight block">Altheryx</span>
+              {workspace && (
+                <span className="text-[10px] text-theme-text-tertiary truncate block">{workspace.nome}</span>
+              )}
+            </div>
           )}
           <button
             onClick={() => {
@@ -169,6 +204,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             if (!isGroup(item)) return renderMenuItem(item);
 
             const group = item;
+            const visibleItems = group.items.filter((i) => !i.adminOnly || user?.isAdmin);
+            if (visibleItems.length === 0) return null;
+
             const groupOpen = openGroups[group.label] ?? true;
             const active = isGroupActive(location.pathname, group);
 
@@ -191,7 +229,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
                 {(collapsed || groupOpen) && (
                   <div className="space-y-0.5 mt-0.5">
-                    {group.items.map(renderMenuItem)}
+                    {visibleItems.map(renderMenuItem)}
                   </div>
                 )}
               </div>
@@ -199,17 +237,34 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className={`border-t border-theme-sidebar-border p-2 ${collapsed ? "flex justify-center" : ""}`}>
+        <div className={`border-t border-theme-sidebar-border p-2 space-y-1`}>
+          {!collapsed && user && (
+            <div className="px-3 py-2 text-xs text-theme-text-tertiary">
+              <div className="font-medium text-theme-text-secondary truncate">{user.nome}</div>
+              <div className="truncate">{user.email}</div>
+            </div>
+          )}
+
           <button
             onClick={toggleTheme}
             title={theme === "dark" ? "Modo claro" : "Modo escuro"}
             className={`flex items-center gap-2 rounded-lg text-sm transition-all text-theme-text-secondary hover:text-theme-text-primary hover:bg-[var(--sidebar-hover)]
-              ${collapsed ? "p-2" : "w-full px-3 py-2"}`}
+              ${collapsed ? "p-2 mx-auto" : "w-full px-3 py-2"}`}
           >
             {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
             {!collapsed && (
               <span>{theme === "dark" ? "Modo Claro" : "Modo Escuro"}</span>
             )}
+          </button>
+
+          <button
+            onClick={handleLogout}
+            title="Sair"
+            className={`flex items-center gap-2 rounded-lg text-sm transition-all text-theme-text-secondary hover:text-red-500 hover:bg-red-500/10
+              ${collapsed ? "p-2 mx-auto" : "w-full px-3 py-2"}`}
+          >
+            <LogOut size={18} />
+            {!collapsed && <span>Sair</span>}
           </button>
         </div>
       </aside>

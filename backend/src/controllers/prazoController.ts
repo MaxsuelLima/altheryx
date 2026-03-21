@@ -39,6 +39,7 @@ export async function listarPrazos(req: Request, res: Response) {
 
     const prazos = await prisma.prazo.findMany({
       where: {
+        workspaceId: req.workspaceId!,
         deletadoEm: null,
         ...(status && { status: status as StatusPrazo }),
         ...(tipo && { tipo: tipo as TipoPrazo }),
@@ -59,8 +60,8 @@ export async function listarPrazos(req: Request, res: Response) {
 
 export async function buscarPrazo(req: IdParam, res: Response) {
   try {
-    const prazo = await prisma.prazo.findUnique({
-      where: { id: req.params.id },
+    const prazo = await prisma.prazo.findFirst({
+      where: { id: req.params.id, workspaceId: req.workspaceId! },
       include: {
         processo: { select: { id: true, numeroProcesso: true, assunto: true } },
         testemunhas: { include: { testemunha: true } },
@@ -81,6 +82,7 @@ export async function criarPrazo(req: Request, res: Response) {
     const prazo = await prisma.prazo.create({
       data: {
         ...dados,
+        workspaceId: req.workspaceId!,
         tipo: dados.tipo as TipoPrazo,
         status: (dados.status as StatusPrazo) || "PENDENTE",
         publicacaoId: dados.publicacaoId ?? undefined,
@@ -100,6 +102,7 @@ export async function criarPrazo(req: Request, res: Response) {
       acao: "CRIACAO",
       dadosNovos: prazo,
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.status(201).json(prazo);
@@ -114,7 +117,7 @@ export async function criarPrazo(req: Request, res: Response) {
 export async function atualizarPrazo(req: IdParam, res: Response) {
   try {
     const { testemunhaIds, ...dados } = prazoSchema.partial().parse(req.body);
-    const anterior = await prisma.prazo.findUnique({ where: { id: req.params.id } });
+    const anterior = await prisma.prazo.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     if (testemunhaIds !== undefined) {
       await prisma.prazoTestemunha.deleteMany({ where: { prazoId: req.params.id } });
@@ -145,6 +148,7 @@ export async function atualizarPrazo(req: IdParam, res: Response) {
       dadosAnteriores: anterior,
       dadosNovos: prazo,
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.json(prazo);
@@ -159,7 +163,7 @@ export async function atualizarPrazo(req: IdParam, res: Response) {
 export async function excluirPrazo(req: IdParam, res: Response) {
   try {
     const usuario = getUsuario(req);
-    const anterior = await prisma.prazo.findUnique({ where: { id: req.params.id } });
+    const anterior = await prisma.prazo.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     await prisma.prazo.update({
       where: { id: req.params.id },
@@ -172,6 +176,7 @@ export async function excluirPrazo(req: IdParam, res: Response) {
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario,
+      workspaceId: req.workspaceId,
     });
 
     return res.status(204).send();
@@ -183,7 +188,7 @@ export async function excluirPrazo(req: IdParam, res: Response) {
 export async function marcarStatus(req: IdParam, res: Response) {
   try {
     const { status } = z.object({ status: z.enum(["PENDENTE", "CUMPRIDO", "PERDIDO"]) }).parse(req.body);
-    const anterior = await prisma.prazo.findUnique({ where: { id: req.params.id } });
+    const anterior = await prisma.prazo.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     const prazo = await prisma.prazo.update({
       where: { id: req.params.id },
@@ -197,6 +202,7 @@ export async function marcarStatus(req: IdParam, res: Response) {
       dadosAnteriores: { status: anterior?.status },
       dadosNovos: { status: prazo.status },
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.json(prazo);

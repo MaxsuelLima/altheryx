@@ -13,6 +13,7 @@ export async function listarDocumentos(req: Request<{ id: string }>, res: Respon
 
     const documentos = await prisma.documento.findMany({
       where: {
+        workspaceId: req.workspaceId!,
         processoId: req.params.id,
         deletadoEm: null,
         documentoPaiId: null,
@@ -42,6 +43,7 @@ export async function uploadDocumento(req: Request<{ id: string }>, res: Respons
 
     const documento = await prisma.documento.create({
       data: {
+        workspaceId: req.workspaceId!,
         processoId: req.params.id,
         nomeOriginal: req.file.originalname,
         nomeArquivo: req.file.filename,
@@ -64,6 +66,7 @@ export async function uploadDocumento(req: Request<{ id: string }>, res: Respons
       acao: "CRIACAO",
       dadosNovos: { id: documento.id, nomeOriginal: documento.nomeOriginal, processoId: req.params.id },
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.status(201).json(documento);
@@ -74,8 +77,8 @@ export async function uploadDocumento(req: Request<{ id: string }>, res: Respons
 
 export async function downloadDocumento(req: Request<{ id: string; docId: string }>, res: Response) {
   try {
-    const documento = await prisma.documento.findUnique({
-      where: { id: req.params.docId },
+    const documento = await prisma.documento.findFirst({
+      where: { id: req.params.docId, workspaceId: req.workspaceId! },
     });
 
     if (!documento || documento.deletadoEm) {
@@ -100,8 +103,8 @@ export async function downloadDocumento(req: Request<{ id: string; docId: string
 
 export async function visualizarDocumento(req: Request<{ id: string; docId: string }>, res: Response) {
   try {
-    const documento = await prisma.documento.findUnique({
-      where: { id: req.params.docId },
+    const documento = await prisma.documento.findFirst({
+      where: { id: req.params.docId, workspaceId: req.workspaceId! },
     });
 
     if (!documento || documento.deletadoEm) {
@@ -126,7 +129,7 @@ export async function visualizarDocumento(req: Request<{ id: string; docId: stri
 
 export async function atualizarDocumento(req: Request<{ id: string; docId: string }>, res: Response) {
   try {
-    const anterior = await prisma.documento.findUnique({ where: { id: req.params.docId } });
+    const anterior = await prisma.documento.findFirst({ where: { id: req.params.docId, workspaceId: req.workspaceId! } });
 
     const documento = await prisma.documento.update({
       where: { id: req.params.docId },
@@ -147,6 +150,7 @@ export async function atualizarDocumento(req: Request<{ id: string; docId: strin
       dadosAnteriores: anterior,
       dadosNovos: documento,
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.json(documento);
@@ -157,8 +161,8 @@ export async function atualizarDocumento(req: Request<{ id: string; docId: strin
 
 export async function excluirDocumento(req: Request<{ id: string; docId: string }>, res: Response) {
   try {
-    const documento = await prisma.documento.findUnique({
-      where: { id: req.params.docId },
+    const documento = await prisma.documento.findFirst({
+      where: { id: req.params.docId, workspaceId: req.workspaceId! },
     });
 
     if (!documento) {
@@ -178,6 +182,7 @@ export async function excluirDocumento(req: Request<{ id: string; docId: string 
       acao: "EXCLUSAO",
       dadosAnteriores: { id: documento.id, nomeOriginal: documento.nomeOriginal },
       usuario,
+      workspaceId: req.workspaceId,
     });
 
     return res.status(204).send();

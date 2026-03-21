@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
-import { registrarAuditoria, getUsuario } from "../lib/auditService";
+import { registrarAuditoria, getUsuario, getWorkspaceId } from "../lib/auditService";
 
 const juizSchema = z.object({
   nome: z.string().min(2),
@@ -20,6 +20,7 @@ export async function listarJuizes(req: Request, res: Response) {
     const juizes = await prisma.juiz.findMany({
       where: {
         deletadoEm: null,
+        workspaceId: req.workspaceId!,
         ...(busca && {
           OR: [
             { nome: { contains: busca, mode: "insensitive" } },
@@ -39,8 +40,8 @@ export async function listarJuizes(req: Request, res: Response) {
 
 export async function buscarJuiz(req: IdParam, res: Response) {
   try {
-    const juiz = await prisma.juiz.findUnique({
-      where: { id: req.params.id },
+    const juiz = await prisma.juiz.findFirst({
+      where: { id: req.params.id, workspaceId: req.workspaceId! },
       include: { processos: { select: { id: true, numeroProcesso: true, status: true } } },
     });
 
@@ -54,7 +55,7 @@ export async function buscarJuiz(req: IdParam, res: Response) {
 export async function criarJuiz(req: Request, res: Response) {
   try {
     const dados = juizSchema.parse(req.body);
-    const juiz = await prisma.juiz.create({ data: dados });
+    const juiz = await prisma.juiz.create({ data: { ...dados, workspaceId: req.workspaceId! } });
 
     await registrarAuditoria({
       entidade: "Juiz",
@@ -62,6 +63,7 @@ export async function criarJuiz(req: Request, res: Response) {
       acao: "CRIACAO",
       dadosNovos: juiz,
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.status(201).json(juiz);
@@ -76,7 +78,7 @@ export async function criarJuiz(req: Request, res: Response) {
 export async function atualizarJuiz(req: IdParam, res: Response) {
   try {
     const dados = juizSchema.partial().parse(req.body);
-    const anterior = await prisma.juiz.findUnique({ where: { id: req.params.id } });
+    const anterior = await prisma.juiz.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     const juiz = await prisma.juiz.update({
       where: { id: req.params.id },
@@ -90,6 +92,7 @@ export async function atualizarJuiz(req: IdParam, res: Response) {
       dadosAnteriores: anterior,
       dadosNovos: juiz,
       usuario: getUsuario(req),
+      workspaceId: req.workspaceId,
     });
 
     return res.json(juiz);
@@ -104,7 +107,7 @@ export async function atualizarJuiz(req: IdParam, res: Response) {
 export async function excluirJuiz(req: IdParam, res: Response) {
   try {
     const usuario = getUsuario(req);
-    const anterior = await prisma.juiz.findUnique({ where: { id: req.params.id } });
+    const anterior = await prisma.juiz.findFirst({ where: { id: req.params.id, workspaceId: req.workspaceId! } });
 
     await prisma.juiz.update({
       where: { id: req.params.id },
@@ -117,6 +120,7 @@ export async function excluirJuiz(req: IdParam, res: Response) {
       acao: "EXCLUSAO",
       dadosAnteriores: anterior,
       usuario,
+      workspaceId: req.workspaceId,
     });
 
     return res.status(204).send();

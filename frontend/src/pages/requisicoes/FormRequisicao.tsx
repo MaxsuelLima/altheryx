@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { api } from "../../lib/api";
+import { useWorkspaceNavigate } from "../../hooks/useWorkspaceNavigate";
 import FormField from "../../components/FormField";
 import CustomSelect from "../../components/ui/CustomSelect";
 
@@ -40,7 +41,7 @@ interface FormRequisicaoProps {
 
 export default function FormRequisicao({ editId, onClose, onSuccess }: FormRequisicaoProps = {}) {
   const params = useParams();
-  const navigate = useNavigate();
+  const navigate = useWorkspaceNavigate();
   const id = editId ?? params.id;
   const isModal = !!onClose;
   const editando = !!id;

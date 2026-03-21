@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { api } from "../../lib/api";
+import { useWorkspaceNavigate } from "../../hooks/useWorkspaceNavigate";
 import TabCapa from "./tabs/TabCapa";
 import TabPartes from "./tabs/TabPartes";
 import TabMovimentacoes from "./tabs/TabMovimentacoes";
@@ -61,7 +62,7 @@ const statusColors: Record<string, string> = {
 
 export default function DetalheProcesso() {
   const { id } = useParams();
-  const navigate = useNavigate();
+  const navigate = useWorkspaceNavigate();
   const [processo, setProcesso] = useState<Processo | null>(null);
   const [activeTab, setActiveTab] = useState("capa");
   const [loading, setLoading] = useState(true);
@@ -118,7 +119,7 @@ export default function DetalheProcesso() {
             Editar Capa
           </button>
           <button
-            onClick={() => navigate("/processos")}
+            onClick={() => navigate("processos")}
             className="bg-theme-bg-tertiary text-theme-text-secondary px-4 py-2 rounded-lg hover:bg-theme-bg-hover transition-colors text-sm font-medium"
           >
             Voltar

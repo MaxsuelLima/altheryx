@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { api } from "../../lib/api";
+import { useWorkspaceNavigate } from "../../hooks/useWorkspaceNavigate";
 import FormField from "../../components/FormField";
 
 interface Escritorio {
@@ -25,7 +26,7 @@ interface FormAdvogadoProps {
 
 export default function FormAdvogado({ editId, onClose, onSuccess }: FormAdvogadoProps = {}) {
   const params = useParams();
-  const navigate = useNavigate();
+  const navigate = useWorkspaceNavigate();
   const id = editId ?? params.id;
   const isModal = !!onClose;
   const [form, setForm] = useState(initialState);
