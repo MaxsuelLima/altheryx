@@ -22,6 +22,10 @@ import ListaProcuracoes from "./pages/procuracoes/ListaProcuracoes";
 import FormProcuracao from "./pages/procuracoes/FormProcuracao";
 import ListaRequisicoes from "./pages/requisicoes/ListaRequisicoes";
 import FormRequisicao from "./pages/requisicoes/FormRequisicao";
+import ListaPeritos from "./pages/peritos/ListaPeritos";
+import FormPerito from "./pages/peritos/FormPerito";
+import ListaPrepostos from "./pages/prepostos/ListaPrepostos";
+import FormPreposto from "./pages/prepostos/FormPreposto";
 import Relatorios from "./pages/relatorios/Relatorios";
 import Aprovacoes from "./pages/aprovacoes/Aprovacoes";
 
@@ -55,6 +59,14 @@ export default function App() {
         <Route path="/testemunhas" element={<ListaTestemunhas />} />
         <Route path="/testemunhas/novo" element={<FormTestemunha />} />
         <Route path="/testemunhas/:id" element={<FormTestemunha />} />
+
+        <Route path="/peritos" element={<ListaPeritos />} />
+        <Route path="/peritos/novo" element={<FormPerito />} />
+        <Route path="/peritos/:id" element={<FormPerito />} />
+
+        <Route path="/prepostos" element={<ListaPrepostos />} />
+        <Route path="/prepostos/novo" element={<FormPreposto />} />
+        <Route path="/prepostos/:id" element={<FormPreposto />} />
 
         <Route path="/publicacoes" element={<Publicacoes />} />
 

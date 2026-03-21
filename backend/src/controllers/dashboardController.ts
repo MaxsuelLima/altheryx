@@ -10,9 +10,16 @@ export async function getDashboard(_req: Request, res: Response) {
       totalEscritorios,
       totalJuizes,
       totalTestemunhas,
+      totalPeritos,
+      totalPrepostos,
+      totalProcuracoes,
+      totalRequisicoes,
       processosPorStatus,
       processosPorCompetencia,
       processosPorTribunal,
+      processosPorFase,
+      prazosProximos,
+      procuracoesVencendo,
     ] = await Promise.all([
       prisma.cliente.count({ where: { ativo: true, deletadoEm: null } }),
       prisma.advogado.count({ where: { ativo: true, deletadoEm: null } }),
@@ -20,6 +27,10 @@ export async function getDashboard(_req: Request, res: Response) {
       prisma.escritorio.count({ where: { ativo: true, deletadoEm: null } }),
       prisma.juiz.count({ where: { ativo: true, deletadoEm: null } }),
       prisma.testemunha.count({ where: { deletadoEm: null } }),
+      prisma.perito.count({ where: { deletadoEm: null } }),
+      prisma.preposto.count({ where: { deletadoEm: null } }),
+      prisma.procuracao.count({ where: { deletadoEm: null } }),
+      prisma.requisicao.count({ where: { deletadoEm: null, status: { in: ["ABERTA", "EM_ANALISE", "EM_ANDAMENTO"] } } }),
       prisma.processo.groupBy({
         by: ["status"],
         _count: { id: true },
@@ -35,6 +46,25 @@ export async function getDashboard(_req: Request, res: Response) {
         _count: { id: true },
         where: { deletadoEm: null },
       }),
+      prisma.processo.groupBy({
+        by: ["fase"],
+        _count: { id: true },
+        where: { fase: { not: null }, deletadoEm: null },
+      }),
+      prisma.prazo.count({
+        where: {
+          deletadoEm: null,
+          status: "PENDENTE",
+          dataFim: { lte: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) },
+        },
+      }),
+      prisma.procuracao.count({
+        where: {
+          deletadoEm: null,
+          status: "VIGENTE",
+          dataValidade: { not: null, lte: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) },
+        },
+      }),
     ]);
 
     return res.json({
@@ -45,6 +75,14 @@ export async function getDashboard(_req: Request, res: Response) {
         escritorios: totalEscritorios,
         juizes: totalJuizes,
         testemunhas: totalTestemunhas,
+        peritos: totalPeritos,
+        prepostos: totalPrepostos,
+        procuracoes: totalProcuracoes,
+        requisicoesPendentes: totalRequisicoes,
+      },
+      alertas: {
+        prazosProximos,
+        procuracoesVencendo,
       },
       processosPorStatus: processosPorStatus.map((item) => ({
         status: item.status,
@@ -56,6 +94,10 @@ export async function getDashboard(_req: Request, res: Response) {
       })),
       processosPorTribunal: processosPorTribunal.map((item) => ({
         tribunal: item.tribunal,
+        quantidade: item._count.id,
+      })),
+      processosPorFase: processosPorFase.map((item) => ({
+        fase: item.fase,
         quantidade: item._count.id,
       })),
     });

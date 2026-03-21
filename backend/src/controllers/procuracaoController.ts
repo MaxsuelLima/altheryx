@@ -1,13 +1,14 @@
 import { Request, Response } from "express";
 import { prisma } from "../lib/prisma";
 import { z } from "zod";
-import { StatusProcuracao } from "@prisma/client";
+import { StatusProcuracao, TipoProcuracao } from "@prisma/client";
 import { registrarAuditoria, getUsuario } from "../lib/auditService";
 
 type IdParam = Request<{ id: string }>;
 
 const procuracaoSchema = z.object({
   processoId: z.string().uuid().nullable().optional(),
+  tipoProcuracao: z.enum(["OUTORGADA", "SUBSTABELECIMENTO_COM_RESERVA", "SUBSTABELECIMENTO_SEM_RESERVA"]).optional(),
   outorgante: z.string().min(2),
   outorgado: z.string().min(2),
   poderes: z.string().min(3),
@@ -69,6 +70,7 @@ export async function criarProcuracao(req: Request, res: Response) {
     const procuracao = await prisma.procuracao.create({
       data: {
         ...dados,
+        tipoProcuracao: (dados.tipoProcuracao as TipoProcuracao) || "OUTORGADA",
         status: (dados.status as StatusProcuracao) || "VIGENTE",
       },
       include: { processo: { select: { id: true, numeroProcesso: true } } },
@@ -100,6 +102,7 @@ export async function atualizarProcuracao(req: IdParam, res: Response) {
       where: { id: req.params.id },
       data: {
         ...dados,
+        tipoProcuracao: dados.tipoProcuracao as TipoProcuracao | undefined,
         status: dados.status as StatusProcuracao | undefined,
       },
       include: { processo: { select: { id: true, numeroProcesso: true } } },

@@ -15,6 +15,8 @@ import requisicaoRoutes from "./requisicaoRoutes";
 import relatorioRoutes from "./relatorioRoutes";
 import aprovacaoRoutes from "./aprovacaoRoutes";
 import auditoriaRoutes from "./auditoriaRoutes";
+import peritoRoutes from "./peritoRoutes";
+import prepostoRoutes from "./prepostoRoutes";
 
 const router = Router();
 
@@ -34,5 +36,7 @@ router.use("/requisicoes", requisicaoRoutes);
 router.use("/relatorios", relatorioRoutes);
 router.use("/aprovacoes", aprovacaoRoutes);
 router.use("/auditoria", auditoriaRoutes);
+router.use("/peritos", peritoRoutes);
+router.use("/prepostos", prepostoRoutes);
 
 export default router;

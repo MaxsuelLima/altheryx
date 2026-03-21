@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { OrigemDocumento, FlagDecisao } from "@prisma/client";
+import { OrigemDocumento, FlagDecisao, ClassificacaoAnexo } from "@prisma/client";
 import { prisma } from "../lib/prisma";
 import { uploadDir } from "../lib/upload";
 import { registrarAuditoria, getUsuario } from "../lib/auditService";
@@ -15,8 +15,15 @@ export async function listarDocumentos(req: Request<{ id: string }>, res: Respon
       where: {
         processoId: req.params.id,
         deletadoEm: null,
+        documentoPaiId: null,
         ...(origem && { origem: origem as never }),
         ...(flagDecisao && { flagDecisao: flagDecisao as never }),
+      },
+      include: {
+        anexos: {
+          where: { deletadoEm: null },
+          orderBy: { dataDocumento: "asc" },
+        },
       },
       orderBy: { dataDocumento: "desc" },
     });
@@ -42,6 +49,8 @@ export async function uploadDocumento(req: Request<{ id: string }>, res: Respons
         tamanho: req.file.size,
         origem: (req.body.origem as OrigemDocumento) || "OUTRO",
         flagDecisao: (req.body.flagDecisao as FlagDecisao) || "NENHUMA",
+        classificacaoAnexo: (req.body.classificacaoAnexo as ClassificacaoAnexo) || null,
+        documentoPaiId: req.body.documentoPaiId || null,
         descricao: req.body.descricao || null,
         dataDocumento: req.body.dataDocumento
           ? new Date(req.body.dataDocumento)
@@ -89,6 +98,32 @@ export async function downloadDocumento(req: Request<{ id: string; docId: string
   }
 }
 
+export async function visualizarDocumento(req: Request<{ id: string; docId: string }>, res: Response) {
+  try {
+    const documento = await prisma.documento.findUnique({
+      where: { id: req.params.docId },
+    });
+
+    if (!documento || documento.deletadoEm) {
+      return res.status(404).json({ error: "Documento não encontrado" });
+    }
+
+    const filePath = path.join(uploadDir, documento.nomeArquivo);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: "Arquivo não encontrado no servidor" });
+    }
+
+    res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(documento.nomeOriginal)}"`);
+    res.setHeader("Content-Type", documento.mimeType);
+
+    const stream = fs.createReadStream(filePath);
+    stream.pipe(res);
+  } catch (error) {
+    return res.status(500).json({ error: "Erro ao visualizar documento" });
+  }
+}
+
 export async function atualizarDocumento(req: Request<{ id: string; docId: string }>, res: Response) {
   try {
     const anterior = await prisma.documento.findUnique({ where: { id: req.params.docId } });
@@ -98,8 +133,10 @@ export async function atualizarDocumento(req: Request<{ id: string; docId: strin
       data: {
         ...(req.body.origem && { origem: req.body.origem }),
         ...(req.body.flagDecisao && { flagDecisao: req.body.flagDecisao }),
+        ...(req.body.classificacaoAnexo !== undefined && { classificacaoAnexo: req.body.classificacaoAnexo || null }),
         ...(req.body.descricao !== undefined && { descricao: req.body.descricao || null }),
         ...(req.body.dataDocumento && { dataDocumento: new Date(req.body.dataDocumento) }),
+        ...(req.body.documentoPaiId !== undefined && { documentoPaiId: req.body.documentoPaiId || null }),
       },
     });
 

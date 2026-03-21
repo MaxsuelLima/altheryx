@@ -9,6 +9,8 @@ const menuItems = [
   { path: "/advogados", label: "Advogados", icon: "⚖️" },
   { path: "/juizes", label: "Juízes", icon: "🧑‍⚖️" },
   { path: "/testemunhas", label: "Testemunhas", icon: "🗣️" },
+  { path: "/peritos", label: "Peritos", icon: "🔬" },
+  { path: "/prepostos", label: "Prepostos", icon: "🧑‍💼" },
   { path: "/publicacoes", label: "Publicações", icon: "📰" },
   { path: "/prazos", label: "Prazos", icon: "⏰" },
   { path: "/calendario", label: "Calendário", icon: "📅" },

@@ -4,22 +4,27 @@ import { Decimal } from "@prisma/client/runtime/library";
 
 export async function getInsights(_req: Request, res: Response) {
   try {
+    const agora = new Date();
+    const ha30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const ha60d = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
+
     const [
       totalClientes,
       clientesNovosUltimo30d,
+      clientesPerdidos30d,
       totalProcessos,
       financeiros,
       parcelasPagas,
       parcelasPendentes,
       processosPorCompetencia,
+      processosEncerrados,
     ] = await Promise.all([
       prisma.cliente.count({ where: { ativo: true, deletadoEm: null } }),
       prisma.cliente.count({
-        where: {
-          ativo: true,
-          deletadoEm: null,
-          criadoEm: { gte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) },
-        },
+        where: { ativo: true, deletadoEm: null, criadoEm: { gte: ha30d } },
+      }),
+      prisma.cliente.count({
+        where: { deletadoEm: { not: null, gte: ha30d } },
       }),
       prisma.processo.count({ where: { deletadoEm: null } }),
       prisma.financeiro.findMany({
@@ -51,14 +56,16 @@ export async function getInsights(_req: Request, res: Response) {
         _avg: { valorCausa: true },
         where: { competencia: { not: null }, deletadoEm: null },
       }),
+      prisma.processo.findMany({
+        where: { deletadoEm: null, status: "ENCERRADO" },
+        select: { competencia: true, comarca: true, criadoEm: true, atualizadoEm: true },
+      }),
     ]);
 
     const toNum = (d: Decimal | null | undefined) => (d ? Number(d) : 0);
 
     const receitaTotal = financeiros.reduce((acc, f) => {
-      const contrato = toNum(f.honorariosContrato);
-      const exito = toNum(f.honorariosExito);
-      return acc + contrato + exito;
+      return acc + toNum(f.honorariosContrato) + toNum(f.honorariosExito);
     }, 0);
 
     const receitaRecorrente = financeiros.reduce((acc, f) => {
@@ -69,11 +76,12 @@ export async function getInsights(_req: Request, res: Response) {
     }, 0);
 
     const mrr = receitaRecorrente > 0 ? receitaRecorrente / 12 : 0;
-
     const ltv = totalClientes > 0 ? receitaTotal / totalClientes : 0;
+    const cac = clientesNovosUltimo30d > 0 ? receitaTotal * 0.15 / clientesNovosUltimo30d : 0;
 
-    const cac = clientesNovosUltimo30d > 0
-      ? receitaTotal * 0.15 / clientesNovosUltimo30d
+    const clientesInicio30d = totalClientes - clientesNovosUltimo30d + clientesPerdidos30d;
+    const churn = clientesInicio30d > 0
+      ? Math.round((clientesPerdidos30d / clientesInicio30d) * 10000) / 100
       : 0;
 
     const honorariosPorCompetencia = processosPorCompetencia.map((item) => {
@@ -100,11 +108,28 @@ export async function getInsights(_req: Request, res: Response) {
       remota: financeiros.filter((f) => f.prognostico === "REMOTA").length,
     };
 
+    const duracaoAgrupada: Record<string, { total: number; soma: number }> = {};
+    for (const p of processosEncerrados) {
+      const dias = Math.ceil((p.atualizadoEm.getTime() - p.criadoEm.getTime()) / (1000 * 60 * 60 * 24));
+      const chave = p.competencia || "Geral";
+      if (!duracaoAgrupada[chave]) duracaoAgrupada[chave] = { total: 0, soma: 0 };
+      duracaoAgrupada[chave].total++;
+      duracaoAgrupada[chave].soma += dias;
+    }
+
+    const duracaoMedia = Object.entries(duracaoAgrupada).map(([competencia, val]) => ({
+      competencia,
+      totalEncerrados: val.total,
+      mediaDias: Math.round(val.soma / val.total),
+      mediaMeses: Math.round((val.soma / val.total / 30) * 10) / 10,
+    }));
+
     return res.json({
       kpis: {
         mrr: Math.round(mrr * 100) / 100,
         ltv: Math.round(ltv * 100) / 100,
         cac: Math.round(cac * 100) / 100,
+        churn,
         receitaTotal: Math.round(receitaTotal * 100) / 100,
         totalRecebido: toNum(parcelasPagas._sum.valor),
         totalPendente: toNum(parcelasPendentes._sum.valor),
@@ -112,9 +137,12 @@ export async function getInsights(_req: Request, res: Response) {
         parcelasPendentes: parcelasPendentes._count,
         totalClientes,
         totalProcessos,
+        clientesNovos30d: clientesNovosUltimo30d,
+        clientesPerdidos30d,
       },
       honorariosPorCompetencia,
       prognosticoDistribuicao,
+      duracaoMedia,
     });
   } catch (error) {
     return res.status(500).json({ error: "Erro ao gerar insights" });

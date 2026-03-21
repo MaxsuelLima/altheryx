@@ -27,6 +27,40 @@ enum TipoParte {
   REU
   TERCEIRO_INTERESSADO
   ASSISTENTE
+  AMICUS_CURIAE
+}
+
+enum TipoPerito {
+  PERITO
+  ASSISTENTE_TECNICO
+}
+
+enum TipoProcuracao {
+  OUTORGADA
+  SUBSTABELECIMENTO_COM_RESERVA
+  SUBSTABELECIMENTO_SEM_RESERVA
+}
+
+enum FaseProcessual {
+  CONHECIMENTO
+  INSTRUCAO
+  JULGAMENTO
+  RECURSAL
+  EXECUCAO
+  CUMPRIMENTO_SENTENCA
+  ENCERRADO
+}
+
+enum ClassificacaoAnexo {
+  DOCUMENTACAO_IDENTIFICACAO
+  COMPROVANTE_RENDA
+  PROCURACAO
+  CONTRATO
+  COMPROVANTE_PAGAMENTO
+  NOTA_FISCAL
+  LAUDO_PERICIAL
+  PARECER_TECNICO
+  OUTRO
 }
 
 enum OrigemDocumento {
@@ -95,10 +129,14 @@ enum AreaRequisicao {
 
 enum TipoRequisicao {
   ELABORACAO_CONTRATO
+  AVALIACAO_CONTRATO
   PARECER
+  ADITAMENTO_CONTRATO
+  RESCISAO_RESOLUCAO
   DISTRATO
   CONSULTIVO_PREVENTIVO
   CONSULTIVO_MATERIAL
+  CONSULTIVO_OUTROS
 }
 
 enum PrioridadeRequisicao {
@@ -249,6 +287,8 @@ model Processo {
   tribunal            String
   competencia         String?
   assunto             String
+  comarca             String?
+  fase                FaseProcessual? @default(CONHECIMENTO)
   valorCausa          Decimal?        @map("valor_causa") @db.Decimal(15, 2)
   segredoJustica      Boolean         @default(false) @map("segredo_justica")
   tutelaLiminar       Boolean         @default(false) @map("tutela_liminar")
@@ -271,6 +311,8 @@ model Processo {
   prazos              Prazo[]
   procuracoes         Procuracao[]
   publicacoes         Publicacao[]
+  peritos             ProcessoPerito[]
+  prepostos           ProcessoPreposto[]
 
   @@map("processos")
 }
@@ -330,21 +372,25 @@ model Movimentacao {
 }
 
 model Documento {
-  id              String          @id @default(uuid())
-  processoId      String          @map("processo_id")
-  nomeOriginal    String          @map("nome_original")
-  nomeArquivo     String          @map("nome_arquivo")
-  mimeType        String          @map("mime_type")
-  tamanho         Int
-  origem          OrigemDocumento @default(OUTRO)
-  flagDecisao     FlagDecisao     @default(NENHUMA) @map("flag_decisao")
-  descricao       String?
-  dataDocumento   DateTime        @map("data_documento")
-  criadoEm        DateTime        @default(now()) @map("criado_em")
-  deletadoEm      DateTime?       @map("deletado_em")
-  deletadoPor     String?         @map("deletado_por")
+  id                  String              @id @default(uuid())
+  processoId          String              @map("processo_id")
+  nomeOriginal        String              @map("nome_original")
+  nomeArquivo         String              @map("nome_arquivo")
+  mimeType            String              @map("mime_type")
+  tamanho             Int
+  origem              OrigemDocumento     @default(OUTRO)
+  flagDecisao         FlagDecisao         @default(NENHUMA) @map("flag_decisao")
+  classificacaoAnexo  ClassificacaoAnexo? @map("classificacao_anexo")
+  documentoPaiId      String?             @map("documento_pai_id")
+  descricao           String?
+  dataDocumento       DateTime            @map("data_documento")
+  criadoEm            DateTime            @default(now()) @map("criado_em")
+  deletadoEm          DateTime?           @map("deletado_em")
+  deletadoPor         String?             @map("deletado_por")
 
-  processo        Processo        @relation(fields: [processoId], references: [id], onDelete: Cascade)
+  processo            Processo            @relation(fields: [processoId], references: [id], onDelete: Cascade)
+  documentoPai        Documento?          @relation("DocumentoHierarquia", fields: [documentoPaiId], references: [id])
+  anexos              Documento[]         @relation("DocumentoHierarquia")
 
   @@map("documentos")
 }
@@ -389,6 +435,7 @@ model Publicacao {
   deletadoPor     String?   @map("deletado_por")
 
   processo        Processo? @relation(fields: [processoId], references: [id], onDelete: SetNull)
+  prazos          Prazo[]
 
   @@map("publicacoes")
 }
@@ -396,6 +443,7 @@ model Publicacao {
 model Prazo {
   id              String      @id @default(uuid())
   processoId      String      @map("processo_id")
+  publicacaoId    String?     @map("publicacao_id")
   tipo            TipoPrazo   @default(PRAZO_PROCESSUAL)
   descricao       String
   dataInicio      DateTime    @map("data_inicio")
@@ -413,6 +461,7 @@ model Prazo {
   deletadoPor     String?     @map("deletado_por")
 
   processo        Processo    @relation(fields: [processoId], references: [id], onDelete: Cascade)
+  publicacao      Publicacao? @relation(fields: [publicacaoId], references: [id], onDelete: SetNull)
   testemunhas     PrazoTestemunha[]
 
   @@map("prazos")
@@ -448,6 +497,7 @@ model CalendarioTribunal {
 model Procuracao {
   id              String            @id @default(uuid())
   processoId      String?           @map("processo_id")
+  tipoProcuracao  TipoProcuracao    @default(OUTORGADA) @map("tipo_procuracao")
   outorgante      String
   outorgado       String
   poderes         String
@@ -488,6 +538,69 @@ model Requisicao {
   deletadoPor     String?               @map("deletado_por")
 
   @@map("requisicoes")
+}
+
+model Perito {
+  id                String       @id @default(uuid())
+  nome              String
+  cpf               String?      @unique
+  email             String?
+  telefone          String?
+  tipo              TipoPerito   @default(PERITO)
+  especialidade     String?
+  registroProfissional String?   @map("registro_profissional")
+  criadoEm          DateTime     @default(now()) @map("criado_em")
+  atualizadoEm      DateTime     @updatedAt @map("atualizado_em")
+  deletadoEm        DateTime?    @map("deletado_em")
+  deletadoPor       String?      @map("deletado_por")
+
+  processos         ProcessoPerito[]
+
+  @@map("peritos")
+}
+
+model ProcessoPerito {
+  id          String   @id @default(uuid())
+  processoId  String   @map("processo_id")
+  peritoId    String   @map("perito_id")
+  criadoEm    DateTime @default(now()) @map("criado_em")
+
+  processo    Processo @relation(fields: [processoId], references: [id], onDelete: Cascade)
+  perito      Perito   @relation(fields: [peritoId], references: [id])
+
+  @@unique([processoId, peritoId])
+  @@map("processos_peritos")
+}
+
+model Preposto {
+  id          String   @id @default(uuid())
+  nome        String
+  cpf         String?  @unique
+  email       String?
+  telefone    String?
+  empresa     String?
+  cargo       String?
+  criadoEm    DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+  deletadoEm  DateTime? @map("deletado_em")
+  deletadoPor String?   @map("deletado_por")
+
+  processos   ProcessoPreposto[]
+
+  @@map("prepostos")
+}
+
+model ProcessoPreposto {
+  id          String   @id @default(uuid())
+  processoId  String   @map("processo_id")
+  prepostoId  String   @map("preposto_id")
+  criadoEm    DateTime @default(now()) @map("criado_em")
+
+  processo    Processo @relation(fields: [processoId], references: [id], onDelete: Cascade)
+  preposto    Preposto @relation(fields: [prepostoId], references: [id])
+
+  @@unique([processoId, prepostoId])
+  @@map("processos_prepostos")
 }
 
 model AuditLog {

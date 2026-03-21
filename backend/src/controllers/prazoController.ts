@@ -8,6 +8,7 @@ type IdParam = Request<{ id: string }>;
 
 const prazoSchema = z.object({
   processoId: z.string().uuid(),
+  publicacaoId: z.string().uuid().nullable().optional(),
   tipo: z.enum(["AUDIENCIA", "PRAZO_PROCESSUAL", "PERICIA", "SUSTENTACAO_ORAL", "OUTRO"]),
   descricao: z.string().min(3),
   dataInicio: z.string().transform((s) => new Date(s)),
@@ -82,6 +83,7 @@ export async function criarPrazo(req: Request, res: Response) {
         ...dados,
         tipo: dados.tipo as TipoPrazo,
         status: (dados.status as StatusPrazo) || "PENDENTE",
+        publicacaoId: dados.publicacaoId ?? undefined,
         testemunhas: testemunhaIds?.length
           ? { create: testemunhaIds.map((tid) => ({ testemunhaId: tid })) }
           : undefined,
