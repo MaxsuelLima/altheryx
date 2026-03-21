@@ -1,0 +1,520 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  ADVOGADO
+  ESTAGIARIO
+  SECRETARIA
+}
+
+enum StatusProcesso {
+  EM_ANDAMENTO
+  SUSPENSO
+  ARQUIVADO
+  ENCERRADO
+  AGUARDANDO_JULGAMENTO
+}
+
+enum TipoParte {
+  AUTOR
+  REU
+  TERCEIRO_INTERESSADO
+  ASSISTENTE
+}
+
+enum OrigemDocumento {
+  PARTE_AUTORA
+  PARTE_RE
+  JUDICIARIO
+  MINISTERIO_PUBLICO
+  PERITO
+  OUTRO
+}
+
+enum FlagDecisao {
+  NENHUMA
+  DEFERIDA
+  INDEFERIDA
+  PARCIALMENTE_DEFERIDA
+  SENTENCA
+  ACORDAO
+  DESPACHO
+}
+
+enum Prognostico {
+  PROVAVEL
+  POSSIVEL
+  REMOTA
+}
+
+enum FormaPagamento {
+  A_VISTA
+  PARCELADO
+  HONORARIOS_EXITO
+  MISTO
+}
+
+enum StatusParcela {
+  PENDENTE
+  PAGA
+  ATRASADA
+  CANCELADA
+}
+
+enum TipoPrazo {
+  AUDIENCIA
+  PRAZO_PROCESSUAL
+  PERICIA
+  SUSTENTACAO_ORAL
+  OUTRO
+}
+
+enum StatusPrazo {
+  PENDENTE
+  CUMPRIDO
+  PERDIDO
+}
+
+enum StatusProcuracao {
+  VIGENTE
+  VENCIDA
+  REVOGADA
+}
+
+enum AreaRequisicao {
+  CONTRATOS
+  CONSULTIVO
+}
+
+enum TipoRequisicao {
+  ELABORACAO_CONTRATO
+  PARECER
+  DISTRATO
+  CONSULTIVO_PREVENTIVO
+  CONSULTIVO_MATERIAL
+}
+
+enum PrioridadeRequisicao {
+  BAIXA
+  MEDIA
+  ALTA
+  URGENTE
+}
+
+enum StatusRequisicao {
+  ABERTA
+  EM_ANALISE
+  EM_ANDAMENTO
+  CONCLUIDA
+  CANCELADA
+}
+
+enum AcaoAuditoria {
+  CRIACAO
+  ATUALIZACAO
+  EXCLUSAO
+}
+
+enum StatusAprovacao {
+  PENDENTE
+  APROVADA
+  REJEITADA
+}
+
+model Usuario {
+  id        String   @id @default(uuid())
+  nome      String
+  email     String   @unique
+  senha     String
+  role      Role     @default(ESTAGIARIO)
+  ativo     Boolean  @default(true)
+  criadoEm  DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+  deletadoEm   DateTime? @map("deletado_em")
+  deletadoPor  String?   @map("deletado_por")
+
+  @@map("usuarios")
+}
+
+model Cliente {
+  id             String   @id @default(uuid())
+  nome           String
+  cpfCnpj        String   @unique @map("cpf_cnpj")
+  email          String?
+  telefone       String?
+  endereco       String?
+  cidade         String?
+  estado         String?  @db.Char(2)
+  cep            String?
+  observacoes    String?
+  ativo          Boolean  @default(true)
+  criadoEm       DateTime @default(now()) @map("criado_em")
+  atualizadoEm   DateTime @updatedAt @map("atualizado_em")
+  deletadoEm     DateTime? @map("deletado_em")
+  deletadoPor    String?   @map("deletado_por")
+
+  partesProcesso ParteProcesso[]
+
+  @@map("clientes")
+}
+
+model Escritorio {
+  id          String   @id @default(uuid())
+  nome        String
+  cnpj        String   @unique
+  email       String?
+  telefone    String?
+  endereco    String?
+  cidade      String?
+  estado      String?  @db.Char(2)
+  cep         String?
+  ativo       Boolean  @default(true)
+  criadoEm    DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+  deletadoEm   DateTime? @map("deletado_em")
+  deletadoPor  String?   @map("deletado_por")
+
+  advogados   Advogado[]
+
+  @@map("escritorios")
+}
+
+model Advogado {
+  id            String   @id @default(uuid())
+  nome          String
+  oab           String   @unique
+  email         String?
+  telefone      String?
+  especialidade String?
+  escritorioId  String?  @map("escritorio_id")
+  ativo         Boolean  @default(true)
+  criadoEm      DateTime @default(now()) @map("criado_em")
+  atualizadoEm  DateTime @updatedAt @map("atualizado_em")
+  deletadoEm    DateTime? @map("deletado_em")
+  deletadoPor   String?   @map("deletado_por")
+
+  escritorio    Escritorio? @relation(fields: [escritorioId], references: [id])
+  processos     Processo[]
+
+  @@map("advogados")
+}
+
+model Juiz {
+  id          String   @id @default(uuid())
+  nome        String
+  tribunal    String?
+  vara        String?
+  email       String?
+  ativo       Boolean  @default(true)
+  criadoEm    DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+  deletadoEm   DateTime? @map("deletado_em")
+  deletadoPor  String?   @map("deletado_por")
+
+  processos   Processo[]
+
+  @@map("juizes")
+}
+
+model Testemunha {
+  id          String   @id @default(uuid())
+  nome        String
+  cpf         String?  @unique
+  email       String?
+  telefone    String?
+  endereco    String?
+  profissao   String?
+  criadoEm    DateTime @default(now()) @map("criado_em")
+  atualizadoEm DateTime @updatedAt @map("atualizado_em")
+  deletadoEm   DateTime? @map("deletado_em")
+  deletadoPor  String?   @map("deletado_por")
+
+  processos   ProcessoTestemunha[]
+  prazos      PrazoTestemunha[]
+
+  @@map("testemunhas")
+}
+
+model Processo {
+  id                  String          @id @default(uuid())
+  numeroProcesso      String          @unique @map("numero_processo")
+  status              StatusProcesso  @default(EM_ANDAMENTO)
+  tribunal            String
+  competencia         String?
+  assunto             String
+  valorCausa          Decimal?        @map("valor_causa") @db.Decimal(15, 2)
+  segredoJustica      Boolean         @default(false) @map("segredo_justica")
+  tutelaLiminar       Boolean         @default(false) @map("tutela_liminar")
+  ultimaMovimentacao  DateTime?       @map("ultima_movimentacao")
+  observacoes         String?
+  advogadoId          String?         @map("advogado_id")
+  juizId              String?         @map("juiz_id")
+  criadoEm            DateTime        @default(now()) @map("criado_em")
+  atualizadoEm        DateTime        @updatedAt @map("atualizado_em")
+  deletadoEm          DateTime?       @map("deletado_em")
+  deletadoPor         String?         @map("deletado_por")
+
+  advogado            Advogado?       @relation(fields: [advogadoId], references: [id])
+  juiz                Juiz?           @relation(fields: [juizId], references: [id])
+  partes              ParteProcesso[]
+  testemunhas         ProcessoTestemunha[]
+  movimentacoes       Movimentacao[]
+  documentos          Documento[]
+  financeiro          Financeiro?
+  prazos              Prazo[]
+  procuracoes         Procuracao[]
+  publicacoes         Publicacao[]
+
+  @@map("processos")
+}
+
+model Financeiro {
+  id                  String          @id @default(uuid())
+  processoId          String          @unique @map("processo_id")
+  prognostico         Prognostico     @default(POSSIVEL)
+  valorCausaEstimado  Decimal?        @map("valor_causa_estimado") @db.Decimal(15, 2)
+  honorariosContrato  Decimal?        @map("honorarios_contrato") @db.Decimal(15, 2)
+  honorariosExito     Decimal?        @map("honorarios_exito") @db.Decimal(15, 2)
+  percentualExito     Decimal?        @map("percentual_exito") @db.Decimal(5, 2)
+  formaPagamento      FormaPagamento  @default(A_VISTA) @map("forma_pagamento")
+  observacoes         String?
+  criadoEm            DateTime        @default(now()) @map("criado_em")
+  atualizadoEm        DateTime        @updatedAt @map("atualizado_em")
+  deletadoEm          DateTime?       @map("deletado_em")
+  deletadoPor         String?         @map("deletado_por")
+
+  processo            Processo        @relation(fields: [processoId], references: [id], onDelete: Cascade)
+  parcelas            Parcela[]
+
+  @@map("financeiros")
+}
+
+model Parcela {
+  id              String         @id @default(uuid())
+  financeiroId    String         @map("financeiro_id")
+  numero          Int
+  valor           Decimal        @db.Decimal(15, 2)
+  dataVencimento  DateTime       @map("data_vencimento")
+  dataPagamento   DateTime?      @map("data_pagamento")
+  status          StatusParcela  @default(PENDENTE)
+  observacoes     String?
+  criadoEm        DateTime       @default(now()) @map("criado_em")
+  atualizadoEm    DateTime       @updatedAt @map("atualizado_em")
+  deletadoEm      DateTime?      @map("deletado_em")
+  deletadoPor     String?        @map("deletado_por")
+
+  financeiro      Financeiro     @relation(fields: [financeiroId], references: [id], onDelete: Cascade)
+
+  @@map("parcelas")
+}
+
+model Movimentacao {
+  id          String   @id @default(uuid())
+  processoId  String   @map("processo_id")
+  data        DateTime
+  descricao   String
+  criadoEm    DateTime @default(now()) @map("criado_em")
+  deletadoEm  DateTime? @map("deletado_em")
+  deletadoPor String?   @map("deletado_por")
+
+  processo    Processo @relation(fields: [processoId], references: [id], onDelete: Cascade)
+
+  @@map("movimentacoes")
+}
+
+model Documento {
+  id              String          @id @default(uuid())
+  processoId      String          @map("processo_id")
+  nomeOriginal    String          @map("nome_original")
+  nomeArquivo     String          @map("nome_arquivo")
+  mimeType        String          @map("mime_type")
+  tamanho         Int
+  origem          OrigemDocumento @default(OUTRO)
+  flagDecisao     FlagDecisao     @default(NENHUMA) @map("flag_decisao")
+  descricao       String?
+  dataDocumento   DateTime        @map("data_documento")
+  criadoEm        DateTime        @default(now()) @map("criado_em")
+  deletadoEm      DateTime?       @map("deletado_em")
+  deletadoPor     String?         @map("deletado_por")
+
+  processo        Processo        @relation(fields: [processoId], references: [id], onDelete: Cascade)
+
+  @@map("documentos")
+}
+
+model ParteProcesso {
+  id          String    @id @default(uuid())
+  processoId  String    @map("processo_id")
+  clienteId   String    @map("cliente_id")
+  tipoParte   TipoParte @map("tipo_parte")
+  criadoEm    DateTime  @default(now()) @map("criado_em")
+
+  processo    Processo  @relation(fields: [processoId], references: [id], onDelete: Cascade)
+  cliente     Cliente   @relation(fields: [clienteId], references: [id])
+
+  @@unique([processoId, clienteId])
+  @@map("partes_processo")
+}
+
+model ProcessoTestemunha {
+  id            String     @id @default(uuid())
+  processoId    String     @map("processo_id")
+  testemunhaId  String     @map("testemunha_id")
+  criadoEm      DateTime   @default(now()) @map("criado_em")
+
+  processo      Processo   @relation(fields: [processoId], references: [id], onDelete: Cascade)
+  testemunha    Testemunha @relation(fields: [testemunhaId], references: [id])
+
+  @@unique([processoId, testemunhaId])
+  @@map("processos_testemunhas")
+}
+
+model Publicacao {
+  id              String   @id @default(uuid())
+  processoId      String?  @map("processo_id")
+  palavraChave    String   @map("palavra_chave")
+  diarioOrigem    String   @map("diario_origem")
+  dataPublicacao  DateTime @map("data_publicacao")
+  conteudo        String
+  lida            Boolean  @default(false)
+  criadoEm        DateTime @default(now()) @map("criado_em")
+  deletadoEm      DateTime? @map("deletado_em")
+  deletadoPor     String?   @map("deletado_por")
+
+  processo        Processo? @relation(fields: [processoId], references: [id], onDelete: SetNull)
+
+  @@map("publicacoes")
+}
+
+model Prazo {
+  id              String      @id @default(uuid())
+  processoId      String      @map("processo_id")
+  tipo            TipoPrazo   @default(PRAZO_PROCESSUAL)
+  descricao       String
+  dataInicio      DateTime    @map("data_inicio")
+  dataFim         DateTime    @map("data_fim")
+  horaInicio      String?     @map("hora_inicio")
+  horaFim         String?     @map("hora_fim")
+  local           String?
+  status          StatusPrazo @default(PENDENTE)
+  observacoes     String?
+  prepostoNome    String?     @map("preposto_nome")
+  prepostoContato String?     @map("preposto_contato")
+  criadoEm        DateTime    @default(now()) @map("criado_em")
+  atualizadoEm    DateTime    @updatedAt @map("atualizado_em")
+  deletadoEm      DateTime?   @map("deletado_em")
+  deletadoPor     String?     @map("deletado_por")
+
+  processo        Processo    @relation(fields: [processoId], references: [id], onDelete: Cascade)
+  testemunhas     PrazoTestemunha[]
+
+  @@map("prazos")
+}
+
+model PrazoTestemunha {
+  id            String     @id @default(uuid())
+  prazoId       String     @map("prazo_id")
+  testemunhaId  String     @map("testemunha_id")
+  criadoEm      DateTime   @default(now()) @map("criado_em")
+
+  prazo         Prazo      @relation(fields: [prazoId], references: [id], onDelete: Cascade)
+  testemunha    Testemunha @relation(fields: [testemunhaId], references: [id])
+
+  @@unique([prazoId, testemunhaId])
+  @@map("prazos_testemunhas")
+}
+
+model CalendarioTribunal {
+  id          String   @id @default(uuid())
+  tribunal    String
+  descricao   String
+  dataInicio  DateTime @map("data_inicio")
+  dataFim     DateTime @map("data_fim")
+  tipo        String
+  criadoEm    DateTime @default(now()) @map("criado_em")
+  deletadoEm  DateTime? @map("deletado_em")
+  deletadoPor String?   @map("deletado_por")
+
+  @@map("calendario_tribunais")
+}
+
+model Procuracao {
+  id              String            @id @default(uuid())
+  processoId      String?           @map("processo_id")
+  outorgante      String
+  outorgado       String
+  poderes         String
+  dataEmissao     DateTime          @map("data_emissao")
+  dataValidade    DateTime?         @map("data_validade")
+  status          StatusProcuracao  @default(VIGENTE)
+  observacoes     String?
+  criadoEm        DateTime          @default(now()) @map("criado_em")
+  atualizadoEm    DateTime          @updatedAt @map("atualizado_em")
+  deletadoEm      DateTime?         @map("deletado_em")
+  deletadoPor     String?           @map("deletado_por")
+
+  processo        Processo?         @relation(fields: [processoId], references: [id], onDelete: SetNull)
+
+  @@map("procuracoes")
+}
+
+model Requisicao {
+  id              String                @id @default(uuid())
+  numero          Int                   @default(autoincrement())
+  solicitante     String
+  departamento    String
+  area            AreaRequisicao
+  tipo            TipoRequisicao
+  prioridade      PrioridadeRequisicao  @default(MEDIA)
+  status          StatusRequisicao      @default(ABERTA)
+  titulo          String
+  descricao       String
+  partesEnvolvidas String?              @map("partes_envolvidas")
+  valorEnvolvido  Decimal?              @map("valor_envolvido") @db.Decimal(15, 2)
+  prazoDesejado   DateTime?             @map("prazo_desejado")
+  resposta        String?
+  responsavel     String?
+  concluidaEm     DateTime?             @map("concluida_em")
+  criadoEm        DateTime              @default(now()) @map("criado_em")
+  atualizadoEm    DateTime              @updatedAt @map("atualizado_em")
+  deletadoEm      DateTime?             @map("deletado_em")
+  deletadoPor     String?               @map("deletado_por")
+
+  @@map("requisicoes")
+}
+
+model AuditLog {
+  id              String          @id @default(uuid())
+  entidade        String
+  entidadeId      String          @map("entidade_id")
+  acao            AcaoAuditoria
+  dadosAnteriores Json?           @map("dados_anteriores")
+  dadosNovos      Json?           @map("dados_novos")
+  usuario         String
+  criadoEm        DateTime        @default(now()) @map("criado_em")
+
+  @@map("audit_logs")
+}
+
+model AprovacaoPendente {
+  id              String          @id @default(uuid())
+  entidade        String
+  entidadeId      String          @map("entidade_id")
+  dadosAtuais     Json            @map("dados_atuais")
+  dadosPropostos  Json            @map("dados_propostos")
+  status          StatusAprovacao @default(PENDENTE)
+  solicitadoPor   String          @map("solicitado_por")
+  aprovadoPor     String?         @map("aprovado_por")
+  motivoRejeicao  String?         @map("motivo_rejeicao")
+  criadoEm        DateTime        @default(now()) @map("criado_em")
+  resolvidoEm     DateTime?       @map("resolvido_em")
+
+  @@map("aprovacoes_pendentes")
+}

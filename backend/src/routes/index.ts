@@ -1,0 +1,38 @@
+import { Router } from "express";
+import clienteRoutes from "./clienteRoutes";
+import escritorioRoutes from "./escritorioRoutes";
+import advogadoRoutes from "./advogadoRoutes";
+import juizRoutes from "./juizRoutes";
+import testemunhaRoutes from "./testemunhaRoutes";
+import dashboardRoutes from "./dashboardRoutes";
+import processoRoutes from "./processoRoutes";
+import financeiroRoutes from "./financeiroRoutes";
+import publicacaoRoutes from "./publicacaoRoutes";
+import prazoRoutes from "./prazoRoutes";
+import calendarioRoutes from "./calendarioRoutes";
+import procuracaoRoutes from "./procuracaoRoutes";
+import requisicaoRoutes from "./requisicaoRoutes";
+import relatorioRoutes from "./relatorioRoutes";
+import aprovacaoRoutes from "./aprovacaoRoutes";
+import auditoriaRoutes from "./auditoriaRoutes";
+
+const router = Router();
+
+router.use("/clientes", clienteRoutes);
+router.use("/escritorios", escritorioRoutes);
+router.use("/advogados", advogadoRoutes);
+router.use("/juizes", juizRoutes);
+router.use("/testemunhas", testemunhaRoutes);
+router.use("/dashboard", dashboardRoutes);
+router.use("/processos", processoRoutes);
+router.use("/financeiro", financeiroRoutes);
+router.use("/publicacoes", publicacaoRoutes);
+router.use("/prazos", prazoRoutes);
+router.use("/calendario", calendarioRoutes);
+router.use("/procuracoes", procuracaoRoutes);
+router.use("/requisicoes", requisicaoRoutes);
+router.use("/relatorios", relatorioRoutes);
+router.use("/aprovacoes", aprovacaoRoutes);
+router.use("/auditoria", auditoriaRoutes);
+
+export default router;

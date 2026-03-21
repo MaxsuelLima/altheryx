@@ -1,0 +1,21 @@
+{
+  "name": "altheryx",
+  "version": "1.0.0",
+  "description": "Sistema de gestão de escritório de advocacia",
+  "private": true,
+  "homepage": "https://github.com/MaxsuelLima/altheryx#readme",
+  "bugs": {
+    "url": "https://github.com/MaxsuelLima/altheryx/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MaxsuelLima/altheryx.git"
+  },
+  "license": "ISC",
+  "author": "Maxsuel Lima",
+  "scripts": {
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "install:all": "cd backend && npm install && cd ../frontend && npm install"
+  }
+}

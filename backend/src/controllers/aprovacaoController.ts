@@ -1,0 +1,143 @@
+import { Request, Response } from "express";
+import { prisma } from "../lib/prisma";
+import { Prognostico, FormaPagamento } from "@prisma/client";
+import { registrarAuditoria, getUsuario } from "../lib/auditService";
+
+export async function listarAprovacoes(req: Request, res: Response) {
+  try {
+    const status = req.query.status as string | undefined;
+
+    const aprovacoes = await prisma.aprovacaoPendente.findMany({
+      where: {
+        ...(status ? { status: status as never } : { status: "PENDENTE" }),
+      },
+      orderBy: { criadoEm: "desc" },
+    });
+
+    return res.json(aprovacoes);
+  } catch (error) {
+    return res.status(500).json({ error: "Erro ao listar aprovações" });
+  }
+}
+
+export async function buscarAprovacao(req: Request<{ id: string }>, res: Response) {
+  try {
+    const aprovacao = await prisma.aprovacaoPendente.findUnique({
+      where: { id: req.params.id },
+    });
+    if (!aprovacao) return res.status(404).json({ error: "Aprovação não encontrada" });
+    return res.json(aprovacao);
+  } catch (error) {
+    return res.status(500).json({ error: "Erro ao buscar aprovação" });
+  }
+}
+
+export async function aprovarAlteracao(req: Request<{ id: string }>, res: Response) {
+  try {
+    const usuario = getUsuario(req);
+    const aprovacao = await prisma.aprovacaoPendente.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!aprovacao) return res.status(404).json({ error: "Aprovação não encontrada" });
+    if (aprovacao.status !== "PENDENTE") {
+      return res.status(400).json({ error: "Esta aprovação já foi processada" });
+    }
+
+    const dados = aprovacao.dadosPropostos as Record<string, unknown>;
+
+    if (aprovacao.entidade === "Processo") {
+      const anterior = await prisma.processo.findUnique({ where: { id: aprovacao.entidadeId } });
+      const atualizado = await prisma.processo.update({
+        where: { id: aprovacao.entidadeId },
+        data: {
+          ...dados,
+          valorCausa: dados.valorCausa !== undefined ? (dados.valorCausa as number ?? undefined) : undefined,
+        },
+      });
+      await registrarAuditoria({
+        entidade: "Processo",
+        entidadeId: aprovacao.entidadeId,
+        acao: "ATUALIZACAO",
+        dadosAnteriores: anterior,
+        dadosNovos: atualizado,
+        usuario,
+      });
+    } else if (aprovacao.entidade === "Financeiro") {
+      const anterior = await prisma.financeiro.findUnique({ where: { id: aprovacao.entidadeId } });
+      const atualizado = await prisma.financeiro.update({
+        where: { id: aprovacao.entidadeId },
+        data: {
+          ...dados,
+          prognostico: dados.prognostico as Prognostico | undefined,
+          formaPagamento: dados.formaPagamento as FormaPagamento | undefined,
+        },
+      });
+      await registrarAuditoria({
+        entidade: "Financeiro",
+        entidadeId: aprovacao.entidadeId,
+        acao: "ATUALIZACAO",
+        dadosAnteriores: anterior,
+        dadosNovos: atualizado,
+        usuario,
+      });
+    }
+
+    const resultado = await prisma.aprovacaoPendente.update({
+      where: { id: req.params.id },
+      data: {
+        status: "APROVADA",
+        aprovadoPor: usuario,
+        resolvidoEm: new Date(),
+      },
+    });
+
+    return res.json(resultado);
+  } catch (error) {
+    return res.status(500).json({ error: "Erro ao aprovar alteração" });
+  }
+}
+
+export async function rejeitarAlteracao(req: Request<{ id: string }>, res: Response) {
+  try {
+    const usuario = getUsuario(req);
+    const { motivo } = req.body as { motivo?: string };
+
+    const aprovacao = await prisma.aprovacaoPendente.findUnique({
+      where: { id: req.params.id },
+    });
+
+    if (!aprovacao) return res.status(404).json({ error: "Aprovação não encontrada" });
+    if (aprovacao.status !== "PENDENTE") {
+      return res.status(400).json({ error: "Esta aprovação já foi processada" });
+    }
+
+    const resultado = await prisma.aprovacaoPendente.update({
+      where: { id: req.params.id },
+      data: {
+        status: "REJEITADA",
+        aprovadoPor: usuario,
+        motivoRejeicao: motivo || null,
+        resolvidoEm: new Date(),
+      },
+    });
+
+    return res.json(resultado);
+  } catch (error) {
+    return res.status(500).json({ error: "Erro ao rejeitar alteração" });
+  }
+}
+
+export async function dashboardAprovacoes(_req: Request, res: Response) {
+  try {
+    const [pendentes, aprovadas, rejeitadas] = await Promise.all([
+      prisma.aprovacaoPendente.count({ where: { status: "PENDENTE" } }),
+      prisma.aprovacaoPendente.count({ where: { status: "APROVADA" } }),
+      prisma.aprovacaoPendente.count({ where: { status: "REJEITADA" } }),
+    ]);
+
+    return res.json({ pendentes, aprovadas, rejeitadas });
+  } catch (error) {
+    return res.status(500).json({ error: "Erro ao gerar dashboard" });
+  }
+}
