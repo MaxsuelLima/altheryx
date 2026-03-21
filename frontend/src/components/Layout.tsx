@@ -98,8 +98,14 @@ function isGroupActive(pathname: string, group: MenuGroup) {
 export default function Layout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => {
+    try { return localStorage.getItem("sidebar-collapsed") === "true"; } catch { return false; }
+  });
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>(() => {
+    try {
+      const saved = localStorage.getItem("sidebar-groups");
+      if (saved) return JSON.parse(saved);
+    } catch {}
     const initial: Record<string, boolean> = {};
     menuStructure.forEach((item) => {
       if (isGroup(item)) initial[item.label] = true;
@@ -108,7 +114,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   });
 
   const toggleGroup = (label: string) => {
-    setOpenGroups((prev) => ({ ...prev, [label]: !prev[label] }));
+    setOpenGroups((prev) => {
+      const next = { ...prev, [label]: !prev[label] };
+      try { localStorage.setItem("sidebar-groups", JSON.stringify(next)); } catch {}
+      return next;
+    });
   };
 
   const renderMenuItem = (item: MenuItem) => {
@@ -143,7 +153,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <span className="text-lg font-bold text-accent tracking-tight">Altheryx</span>
           )}
           <button
-            onClick={() => setCollapsed(!collapsed)}
+            onClick={() => {
+              const next = !collapsed;
+              setCollapsed(next);
+              try { localStorage.setItem("sidebar-collapsed", String(next)); } catch {}
+            }}
             className="p-1.5 rounded-lg hover:bg-[var(--sidebar-hover)] text-theme-text-tertiary hover:text-theme-text-primary transition-colors"
           >
             {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
