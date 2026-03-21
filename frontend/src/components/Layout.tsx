@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
@@ -27,6 +27,7 @@ import {
   Moon,
   LogOut,
   UserCog,
+  Settings,
 } from "lucide-react";
 
 interface MenuItem {
@@ -145,6 +146,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     navigate("/");
   }
 
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
+        setSettingsOpen(false);
+      }
+    }
+    if (settingsOpen) document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [settingsOpen]);
+
   const menuStructure = getMenuStructure();
 
   const renderMenuItem = (item: MenuItem) => {
@@ -174,9 +188,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen flex bg-theme-bg-primary">
+    <div className="h-screen flex overflow-hidden bg-theme-bg-primary">
       <aside
-        className={`${collapsed ? "w-[68px]" : "w-60"} shrink-0 bg-theme-sidebar-bg border-r border-theme-sidebar-border flex flex-col transition-all duration-300`}
+        className={`${collapsed ? "w-[68px]" : "w-60"} shrink-0 h-screen bg-theme-sidebar-bg border-r border-theme-sidebar-border flex flex-col transition-all duration-300`}
       >
         <div className={`h-14 flex items-center border-b border-theme-sidebar-border ${collapsed ? "justify-center px-2" : "justify-between px-4"}`}>
           {!collapsed && (
@@ -237,40 +251,52 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className={`border-t border-theme-sidebar-border p-2 space-y-1`}>
-          {!collapsed && user && (
-            <div className="px-3 py-2 text-xs text-theme-text-tertiary">
-              <div className="font-medium text-theme-text-secondary truncate">{user.nome}</div>
-              <div className="truncate">{user.email}</div>
-            </div>
-          )}
+        <div className="shrink-0 border-t border-theme-sidebar-border p-2" ref={settingsRef}>
+          <div className="relative">
+            <button
+              onClick={() => setSettingsOpen((prev) => !prev)}
+              title={collapsed ? user?.nome || "Configurações" : undefined}
+              className={`flex items-center gap-2 rounded-lg text-sm transition-all w-full hover:bg-[var(--sidebar-hover)]
+                ${collapsed ? "p-2 justify-center" : "px-3 py-2"}`}
+            >
+              <span className="shrink-0 w-7 h-7 rounded-full bg-accent/20 text-accent flex items-center justify-center text-xs font-semibold uppercase">
+                {user?.nome?.split(" ").map((n) => n[0]).slice(0, 2).join("") || "?"}
+              </span>
+              {!collapsed && user && (
+                <>
+                  <div className="min-w-0 flex-1 text-left">
+                    <div className="font-medium text-theme-text-secondary truncate text-xs">{user.nome}</div>
+                    <div className="text-theme-text-tertiary truncate text-[10px]">{user.email}</div>
+                  </div>
+                  <Settings size={16} className="shrink-0 text-theme-text-tertiary" />
+                </>
+              )}
+            </button>
 
-          <button
-            onClick={toggleTheme}
-            title={theme === "dark" ? "Modo claro" : "Modo escuro"}
-            className={`flex items-center gap-2 rounded-lg text-sm transition-all text-theme-text-secondary hover:text-theme-text-primary hover:bg-[var(--sidebar-hover)]
-              ${collapsed ? "p-2 mx-auto" : "w-full px-3 py-2"}`}
-          >
-            {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-            {!collapsed && (
-              <span>{theme === "dark" ? "Modo Claro" : "Modo Escuro"}</span>
+            {settingsOpen && (
+              <div className={`absolute bottom-full mb-1 ${collapsed ? "left-full ml-1" : "left-0 right-0"} bg-theme-card-bg border border-theme-border rounded-lg shadow-lg py-1 z-50`}>
+                <button
+                  onClick={() => { toggleTheme(); setSettingsOpen(false); }}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-theme-text-secondary hover:bg-[var(--sidebar-hover)] hover:text-theme-text-primary transition-colors"
+                >
+                  {theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+                  <span>{theme === "dark" ? "Modo Claro" : "Modo Escuro"}</span>
+                </button>
+                <button
+                  onClick={() => { setSettingsOpen(false); handleLogout(); }}
+                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-theme-text-secondary hover:text-red-500 hover:bg-red-500/10 transition-colors"
+                >
+                  <LogOut size={16} />
+                  <span>Sair</span>
+                </button>
+              </div>
             )}
-          </button>
-
-          <button
-            onClick={handleLogout}
-            title="Sair"
-            className={`flex items-center gap-2 rounded-lg text-sm transition-all text-theme-text-secondary hover:text-red-500 hover:bg-red-500/10
-              ${collapsed ? "p-2 mx-auto" : "w-full px-3 py-2"}`}
-          >
-            <LogOut size={18} />
-            {!collapsed && <span>Sair</span>}
-          </button>
+          </div>
         </div>
       </aside>
 
       <main className="flex-1 overflow-auto">
-        <div className="p-6 max-w-[1400px] mx-auto">{children}</div>
+        <div className="p-4">{children}</div>
       </main>
     </div>
   );
