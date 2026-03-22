@@ -1,6 +1,6 @@
 {
   "name": "altheryx-backend",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "Backend do sistema Altheryx - Gestão de escritório de advocacia",
   "main": "dist/server.js",
   "scripts": {

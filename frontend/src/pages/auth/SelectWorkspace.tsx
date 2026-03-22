@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import { Building2, ArrowRight, Shield } from "lucide-react";
 
@@ -9,8 +9,7 @@ export default function SelectWorkspace() {
   const [slug, setSlug] = useState("");
 
   if (isAuthenticated && workspace) {
-    navigate(`/workspace/${workspace.slug}`);
-    return null;
+    return <Navigate to={`/workspace/${workspace.slug}`} replace />;
   }
 
   function handleSubmit(e: React.FormEvent) {
